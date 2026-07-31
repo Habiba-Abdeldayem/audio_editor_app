@@ -41,12 +41,29 @@ class SplitSection extends StatelessWidget {
             ),
             if (resultPaths != null) ...[
               const SizedBox(height: 12),
-              Text('Created:', style: Theme.of(context).textTheme.labelMedium),
+              Text('Created files:',
+                  style: Theme.of(context).textTheme.labelMedium),
+              const SizedBox(height: 4),
               for (final path in resultPaths!)
-                Text(
-                  path.split('/').last,
-                  style: Theme.of(context).textTheme.bodySmall,
-                  overflow: TextOverflow.ellipsis,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      path.split('/').last,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    Text(
+                      path,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 10,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                 ),
             ],
           ],
