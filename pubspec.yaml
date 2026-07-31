@@ -1,0 +1,58 @@
+name: audio_editor_app
+description: Clean-architecture Flutter app for editing m4a audio files (waveform navigation, splitting, compression, metadata).
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_bloc: ^8.1.5
+  equatable: ^2.0.5
+
+  # Dependency injection
+  get_it: ^7.7.0
+
+  # Playback + smooth scrubbing
+  just_audio: ^0.9.40
+  audio_session: ^0.1.21
+
+  # Waveform rendering & navigation
+  audio_waveforms: ^1.1.1
+
+  # Splitting / compressing (FFmpeg)
+  ffmpeg_kit_flutter_new: ^4.6.2
+
+  # File pick / paths
+  file_picker: ^8.1.2
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Metadata read/write (title, artist, artwork tags on m4a/mp4 container)
+  # audiotags gives cross-platform tag read/write support
+  audiotags: ^1.4.5
+
+  # Artwork picking
+  image_picker: ^1.1.2
+
+  # Functional error handling
+  dartz: ^0.10.1
+
+  # Value formatting
+  intl: ^0.19.0
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  mocktail: ^1.0.4
+  bloc_test: ^9.1.7
+
+flutter:
+  uses-material-design: true
