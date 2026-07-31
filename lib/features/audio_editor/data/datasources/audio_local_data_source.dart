@@ -76,34 +76,13 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
       // Stage 2: Duration via just_audio (fast, container-level probe).
       final duration = await _player.setFilePath(filePath) ?? Duration.zero;
 
-      // Stage 3: Downsampled amplitude samples for the waveform widget.
-      // Reduced from 400 to 200 samples for faster extraction while maintaining
-      // good visual quality. Extracted once at load time and cached on the
-      // AudioTrack entity so repeated rebuilds don't re-decode the file.
-      _waveformExtractor?.dispose();
-      _waveformExtractor = waveforms.PlayerController();
-
-      List<double> samples;
-      try {
-        samples = await _waveformExtractor!
-            .extractWaveformData(
-              path: filePath,
-              noOfSamples: 200,
-            )
-            .timeout(
-              const Duration(seconds: 20),
-              onTimeout: () => [],
-            );
-      } catch (e) {
-        // If waveform extraction fails, return empty samples instead of failing completely
-        samples = [];
-      }
-
+      // Skip waveform extraction for instant loading
+      // Waveform will be extracted lazily when needed
       return AudioTrackModel(
         filePath: filePath,
         duration: duration,
         fileSizeBytes: size,
-        waveformSamples: samples,
+        waveformSamples: [], // Empty for now, will be filled later
       );
     } on UnsupportedFormatException {
       rethrow;
