@@ -5,8 +5,8 @@ import '../error/failures.dart';
 /// Every use case returns Either<Failure, T> so the presentation layer
 /// always has to explicitly handle the failure path — no thrown exceptions
 /// leak past the domain boundary.
-abstract class UseCase<Type, Params> {
-  Future<Either<Failure, Type>> call(Params params);
+abstract class UseCase<T, Params> {
+  Future<Either<Failure, T>> call(Params params);
 }
 
 /// For use cases that take no parameters.

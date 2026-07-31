@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 
-import '../../core/error/exceptions.dart';
-import '../../core/error/failures.dart';
-import '../../core/constants/app_constants.dart';
-import '../../core/utils/formatters.dart';
+import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/audio_metadata.dart';
 import '../../domain/entities/audio_track.dart';
 import '../../domain/entities/compression_option.dart';
@@ -117,10 +117,26 @@ class AudioRepositoryImpl implements AudioRepository {
       final duration = await localDataSource.getDuration(filePath);
 
       const presets = [
-        (CompressionQuality.high, AppConstants.highQualityBitrate, 'High (192 kbps)'),
-        (CompressionQuality.medium, AppConstants.mediumQualityBitrate, 'Medium (128 kbps)'),
-        (CompressionQuality.low, AppConstants.lowQualityBitrate, 'Low (64 kbps)'),
-        (CompressionQuality.voice, AppConstants.voiceOptimizedBitrate, 'Voice-optimized (32 kbps)'),
+        (
+          CompressionQuality.high,
+          AppConstants.highQualityBitrate,
+          'High (192 kbps)'
+        ),
+        (
+          CompressionQuality.medium,
+          AppConstants.mediumQualityBitrate,
+          'Medium (128 kbps)'
+        ),
+        (
+          CompressionQuality.low,
+          AppConstants.lowQualityBitrate,
+          'Low (64 kbps)'
+        ),
+        (
+          CompressionQuality.voice,
+          AppConstants.voiceOptimizedBitrate,
+          'Voice-optimized (32 kbps)'
+        ),
       ];
       final options = presets
           .map((preset) => CompressionOption(

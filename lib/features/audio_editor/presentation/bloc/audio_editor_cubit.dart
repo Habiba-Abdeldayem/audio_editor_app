@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../core/usecases/usecase.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../../domain/usecases/compress_audio_file.dart';
 import '../../domain/usecases/get_audio_metadata.dart';
 import '../../domain/usecases/get_compression_options.dart';
@@ -10,10 +10,10 @@ import '../../domain/usecases/load_audio_file.dart';
 import '../../domain/usecases/playback_usecases.dart';
 import '../../domain/usecases/split_audio_file.dart';
 import '../../domain/usecases/update_audio_metadata.dart';
-import 'audio_editor_event.dart';
+import '../../data/models/audio_metadata_model.dart';
 import 'audio_editor_state.dart';
 
-class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
+class AudioEditorCubit extends Cubit<AudioEditorState> {
   final LoadAudioFile loadAudioFile;
   final SplitAudioFile splitAudioFile;
   final GetCompressionOptions getCompressionOptions;
@@ -36,7 +36,7 @@ class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
   /// instead of janky.
   Timer? _seekDebounce;
 
-  AudioEditorBloc({
+  AudioEditorCubit({
     required this.loadAudioFile,
     required this.splitAudioFile,
     required this.getCompressionOptions,
@@ -50,35 +50,39 @@ class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
     required this.watchPosition,
     required this.watchPlayingState,
   }) : super(AudioEditorState.initial()) {
-    on<AudioFilePicked>(_onFilePicked);
-    on<PlayPauseToggled>(_onPlayPauseToggled);
-    on<SeekRequested>(_onSeekRequested);
-    on<PositionTicked>(_onPositionTicked);
-    on<PlayingStateChanged>(_onPlayingStateChanged);
-    on<SplitRequested>(_onSplitRequested);
-    on<CompressionOptionsRequested>(_onCompressionOptionsRequested);
-    on<CompressionConfirmed>(_onCompressionConfirmed);
-    on<MetadataEditorOpened>(_onMetadataEditorOpened);
-    on<MetadataFieldChanged>(_onMetadataFieldChanged);
-    on<MetadataSaveRequested>(_onMetadataSaveRequested);
+    _listenToPlayback();
   }
 
-  Future<void> _onFilePicked(
-    AudioFilePicked event,
-    Emitter<AudioEditorState> emit,
-  ) async {
-    emit(state.copyWith(status: EditorStatus.loading, clearFailure: true));
+  void _listenToPlayback() {
+    _positionSub?.cancel();
+    _playingSub?.cancel();
+    _positionSub = watchPosition().listen((pos) => _onPositionTicked(pos));
+    _playingSub = watchPlayingState()
+        .listen((playing) => _onPlayingStateChanged(playing));
+  }
 
-    final result = await loadAudioFile(LoadAudioFileParams(event.filePath));
+  Future<void> loadFile(String filePath) async {
+    emit(state.copyWith(
+      status: EditorStatus.loading,
+      loadingStep: LoadingStep.fileMetadata,
+      clearFailure: true,
+    ));
+
+    final result = await loadAudioFile(LoadAudioFileParams(filePath));
 
     await result.fold(
       (failure) async {
         emit(state.copyWith(status: EditorStatus.error, failure: failure));
       },
       (track) async {
+        emit(state.copyWith(loadingStep: LoadingStep.waveform));
+        // Small delay to allow UI to update before playback prep
+        await Future.delayed(const Duration(milliseconds: 50));
+        emit(state.copyWith(loadingStep: LoadingStep.playbackPrep));
         final prepared = await preparePlayback(track.filePath);
         prepared.fold(
-          (failure) => emit(state.copyWith(status: EditorStatus.error, failure: failure)),
+          (failure) => emit(
+              state.copyWith(status: EditorStatus.error, failure: failure)),
           (_) {
             _listenToPlayback();
             emit(state.copyWith(
@@ -86,6 +90,7 @@ class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
               track: track,
               position: Duration.zero,
               isPlaying: false,
+              loadingStep: null,
             ));
           },
         );
@@ -93,82 +98,61 @@ class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
     );
   }
 
-  void _listenToPlayback() {
-    _positionSub?.cancel();
-    _playingSub?.cancel();
-    _positionSub = watchPosition().listen((pos) => add(PositionTicked(pos)));
-    _playingSub =
-        watchPlayingState().listen((playing) => add(PlayingStateChanged(playing)));
-  }
-
-  Future<void> _onPlayPauseToggled(
-    PlayPauseToggled event,
-    Emitter<AudioEditorState> emit,
-  ) async {
+  Future<void> togglePlayPause() async {
     if (state.isPlaying) {
       await pauseAudio(const NoParams());
     } else {
       await playAudio(const NoParams());
     }
-    // isPlaying itself is updated reactively via PlayingStateChanged, which
+    // isPlaying itself is updated reactively via _onPlayingStateChanged, which
     // comes from the player's own state stream — keeps a single source of
-    // truth instead of the bloc guessing at the new state.
+    // truth instead of the cubit guessing at the new state.
   }
 
-  Future<void> _onSeekRequested(
-    SeekRequested event,
-    Emitter<AudioEditorState> emit,
-  ) async {
+  void seek(Duration position) {
     // Update the displayed position immediately (optimistic UI) so the
     // scrubber tracks the finger 1:1 without waiting on the player.
-    emit(state.copyWith(position: event.position));
+    emit(state.copyWith(position: position));
 
     _seekDebounce?.cancel();
     _seekDebounce = Timer(const Duration(milliseconds: 40), () {
-      seekAudio(event.position);
+      seekAudio(position);
     });
   }
 
-  void _onPositionTicked(PositionTicked event, Emitter<AudioEditorState> emit) {
-    emit(state.copyWith(position: event.position));
+  void _onPositionTicked(Duration position) {
+    emit(state.copyWith(position: position));
   }
 
-  void _onPlayingStateChanged(
-    PlayingStateChanged event,
-    Emitter<AudioEditorState> emit,
-  ) {
-    emit(state.copyWith(isPlaying: event.isPlaying));
+  void _onPlayingStateChanged(bool isPlaying) {
+    emit(state.copyWith(isPlaying: isPlaying));
   }
 
-  Future<void> _onSplitRequested(
-    SplitRequested event,
-    Emitter<AudioEditorState> emit,
-  ) async {
+  Future<void> splitAudio() async {
     final track = state.track;
     if (track == null) return;
 
     final result = await splitAudioFile(
-      SplitAudioFileParams(filePath: track.filePath, splitPoint: state.position),
+      SplitAudioFileParams(
+          filePath: track.filePath, splitPoint: state.position),
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(status: EditorStatus.error, failure: failure)),
-      (paths) => emit(state.copyWith(splitResultPaths: paths, clearFailure: true)),
+      (failure) =>
+          emit(state.copyWith(status: EditorStatus.error, failure: failure)),
+      (paths) =>
+          emit(state.copyWith(splitResultPaths: paths, clearFailure: true)),
     );
   }
 
-  Future<void> _onCompressionOptionsRequested(
-    CompressionOptionsRequested event,
-    Emitter<AudioEditorState> emit,
-  ) async {
+  Future<void> loadCompressionOptions() async {
     final track = state.track;
     if (track == null) return;
 
     emit(state.copyWith(compressionStatus: CompressionStatus.loadingOptions));
 
     final result = await getCompressionOptions(
-      GetCompressionOptionsParams(track.filePath),
-    );
+        GetCompressionOptionsParams(track.filePath));
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -182,17 +166,15 @@ class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
     );
   }
 
-  Future<void> _onCompressionConfirmed(
-    CompressionConfirmed event,
-    Emitter<AudioEditorState> emit,
-  ) async {
+  Future<void> compressAudio(int bitrateKbps) async {
     final track = state.track;
     if (track == null) return;
 
     emit(state.copyWith(compressionStatus: CompressionStatus.compressing));
 
     final result = await compressAudioFile(
-      CompressAudioFileParams(filePath: track.filePath, bitrateKbps: event.bitrateKbps),
+      CompressAudioFileParams(
+          filePath: track.filePath, bitrateKbps: bitrateKbps),
     );
 
     result.fold(
@@ -207,16 +189,14 @@ class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
     );
   }
 
-  Future<void> _onMetadataEditorOpened(
-    MetadataEditorOpened event,
-    Emitter<AudioEditorState> emit,
-  ) async {
+  Future<void> openMetadataEditor() async {
     final track = state.track;
     if (track == null) return;
 
     emit(state.copyWith(metadataStatus: MetadataStatus.loading));
 
-    final result = await getAudioMetadata(GetAudioMetadataParams(track.filePath));
+    final result =
+        await getAudioMetadata(GetAudioMetadataParams(track.filePath));
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -226,22 +206,16 @@ class AudioEditorBloc extends Bloc<AudioEditorEvent, AudioEditorState> {
       (metadata) => emit(state.copyWith(
         metadataStatus: MetadataStatus.editing,
         metadata: metadata,
-        metadataDraft: metadata,
+        metadataDraft: AudioMetadataModel.fromEntity(metadata),
       )),
     );
   }
 
-  void _onMetadataFieldChanged(
-    MetadataFieldChanged event,
-    Emitter<AudioEditorState> emit,
-  ) {
-    emit(state.copyWith(metadataDraft: event.draft));
+  void updateMetadataField(AudioMetadataModel draft) {
+    emit(state.copyWith(metadataDraft: draft));
   }
 
-  Future<void> _onMetadataSaveRequested(
-    MetadataSaveRequested event,
-    Emitter<AudioEditorState> emit,
-  ) async {
+  Future<void> saveMetadata() async {
     final track = state.track;
     final draft = state.metadataDraft;
     if (track == null || draft == null) return;

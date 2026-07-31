@@ -7,7 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/error/exceptions.dart';
+import '../../../../core/error/exceptions.dart';
 import '../models/audio_metadata_model.dart';
 import '../models/audio_track_model.dart';
 
@@ -70,14 +70,16 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   Future<AudioTrackModel> loadAudioFile(String filePath) async {
     _assertM4a(filePath);
     try {
+      // Stage 1: File size check (fast)
       final size = await File(filePath).length();
 
-      // Duration via just_audio (fast, container-level probe).
+      // Stage 2: Duration via just_audio (fast, container-level probe).
       final duration = await _player.setFilePath(filePath) ?? Duration.zero;
 
-      // Downsampled amplitude samples for the waveform widget. Extracted
-      // once at load time and cached on the AudioTrack entity so repeated
-      // rebuilds of the waveform UI don't re-decode the file.
+      // Stage 3: Downsampled amplitude samples for the waveform widget.
+      // Reduced from 400 to 200 samples for faster extraction while maintaining
+      // good visual quality. Extracted once at load time and cached on the
+      // AudioTrack entity so repeated rebuilds don't re-decode the file.
       _waveformExtractor?.dispose();
       _waveformExtractor = waveforms.PlayerController();
 
@@ -86,10 +88,10 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
         samples = await _waveformExtractor!
             .extractWaveformData(
               path: filePath,
-              noOfSamples: 400,
+              noOfSamples: 200,
             )
             .timeout(
-              const Duration(seconds: 30),
+              const Duration(seconds: 20),
               onTimeout: () => [],
             );
       } catch (e) {

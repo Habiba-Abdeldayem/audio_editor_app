@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:dartz/dartz.dart';
-import '../../core/error/failures.dart';
-import '../../core/usecases/usecase.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../repositories/audio_repository.dart';
 
 class CompressAudioFile implements UseCase<String, CompressAudioFileParams> {
@@ -20,7 +20,8 @@ class CompressAudioFile implements UseCase<String, CompressAudioFileParams> {
 class CompressAudioFileParams extends Equatable {
   final String filePath;
   final int bitrateKbps;
-  const CompressAudioFileParams({required this.filePath, required this.bitrateKbps});
+  const CompressAudioFileParams(
+      {required this.filePath, required this.bitrateKbps});
   @override
   List<Object?> get props => [filePath, bitrateKbps];
 }

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:dartz/dartz.dart';
-import '../../core/error/failures.dart';
-import '../../core/usecases/usecase.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../entities/compression_option.dart';
 import '../repositories/audio_repository.dart';
 

@@ -1,11 +1,16 @@
 import 'package:equatable/equatable.dart';
-import '../../core/error/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/entities/audio_metadata.dart';
 import '../../domain/entities/audio_track.dart';
 import '../../domain/entities/compression_option.dart';
+import '../../data/models/audio_metadata_model.dart';
 
 enum EditorStatus { initial, loading, ready, error }
+
+enum LoadingStep { fileMetadata, waveform, playbackPrep }
+
 enum CompressionStatus { idle, loadingOptions, compressing, done, error }
+
 enum MetadataStatus { idle, loading, editing, saving, saved, error }
 
 class AudioEditorState extends Equatable {
@@ -14,6 +19,7 @@ class AudioEditorState extends Equatable {
   final Duration position;
   final bool isPlaying;
   final Failure? failure;
+  final LoadingStep? loadingStep;
 
   // Split
   final List<String>? splitResultPaths;
@@ -26,7 +32,7 @@ class AudioEditorState extends Equatable {
   // Metadata
   final MetadataStatus metadataStatus;
   final AudioMetadata? metadata;
-  final AudioMetadata? metadataDraft;
+  final AudioMetadataModel? metadataDraft;
 
   const AudioEditorState({
     this.status = EditorStatus.initial,
@@ -34,6 +40,7 @@ class AudioEditorState extends Equatable {
     this.position = Duration.zero,
     this.isPlaying = false,
     this.failure,
+    this.loadingStep,
     this.splitResultPaths,
     this.compressionStatus = CompressionStatus.idle,
     this.compressionOptions = const [],
@@ -58,13 +65,14 @@ class AudioEditorState extends Equatable {
     bool? isPlaying,
     Failure? failure,
     bool clearFailure = false,
+    LoadingStep? loadingStep,
     List<String>? splitResultPaths,
     CompressionStatus? compressionStatus,
     List<CompressionOption>? compressionOptions,
     String? compressedFilePath,
     MetadataStatus? metadataStatus,
     AudioMetadata? metadata,
-    AudioMetadata? metadataDraft,
+    AudioMetadataModel? metadataDraft,
   }) {
     return AudioEditorState(
       status: status ?? this.status,
@@ -72,6 +80,7 @@ class AudioEditorState extends Equatable {
       position: position ?? this.position,
       isPlaying: isPlaying ?? this.isPlaying,
       failure: clearFailure ? null : (failure ?? this.failure),
+      loadingStep: loadingStep ?? this.loadingStep,
       splitResultPaths: splitResultPaths ?? this.splitResultPaths,
       compressionStatus: compressionStatus ?? this.compressionStatus,
       compressionOptions: compressionOptions ?? this.compressionOptions,
@@ -89,6 +98,7 @@ class AudioEditorState extends Equatable {
         position,
         isPlaying,
         failure,
+        loadingStep,
         splitResultPaths,
         compressionStatus,
         compressionOptions,

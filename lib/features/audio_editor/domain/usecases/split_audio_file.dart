@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:dartz/dartz.dart';
-import '../../core/error/failures.dart';
-import '../../core/usecases/usecase.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../repositories/audio_repository.dart';
 
 /// Splits the currently loaded file into two halves at the given point
@@ -22,7 +22,8 @@ class SplitAudioFile implements UseCase<List<String>, SplitAudioFileParams> {
 class SplitAudioFileParams extends Equatable {
   final String filePath;
   final Duration splitPoint;
-  const SplitAudioFileParams({required this.filePath, required this.splitPoint});
+  const SplitAudioFileParams(
+      {required this.filePath, required this.splitPoint});
   @override
   List<Object?> get props => [filePath, splitPoint];
 }

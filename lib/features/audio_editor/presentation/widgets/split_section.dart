@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/utils/formatters.dart';
+import '../../../../core/utils/formatters.dart';
 
 class SplitSection extends StatelessWidget {
   final Duration currentPosition;

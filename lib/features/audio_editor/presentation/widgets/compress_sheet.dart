@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/utils/formatters.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/compression_option.dart';
 
 class CompressSheet extends StatelessWidget {
@@ -29,7 +29,8 @@ class CompressSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Compress audio', style: Theme.of(context).textTheme.titleLarge),
+            Text('Compress audio',
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
               'Current size: ${Formatters.fileSize(originalSizeBytes)}',
@@ -37,7 +38,8 @@ class CompressSheet extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             if (isLoadingOptions)
-              const Center(child: Padding(
+              const Center(
+                  child: Padding(
                 padding: EdgeInsets.all(24),
                 child: CircularProgressIndicator(),
               ))
@@ -62,8 +64,7 @@ class CompressSheet extends StatelessWidget {
               ...options.map((option) {
                 final savingPercent = originalSizeBytes == 0
                     ? 0
-                    : (100 -
-                            (option.estimatedBytes / originalSizeBytes * 100))
+                    : (100 - (option.estimatedBytes / originalSizeBytes * 100))
                         .clamp(0, 100)
                         .round();
                 return ListTile(

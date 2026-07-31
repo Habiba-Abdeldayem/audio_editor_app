@@ -3,12 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../domain/entities/audio_metadata.dart';
+import '../../data/models/audio_metadata_model.dart';
 
 class MetadataEditorSheet extends StatefulWidget {
-  final AudioMetadata initial;
+  final AudioMetadataModel initial;
   final bool isSaving;
-  final ValueChanged<AudioMetadata> onChanged;
+  final ValueChanged<AudioMetadataModel> onChanged;
   final VoidCallback onSave;
 
   const MetadataEditorSheet({
@@ -41,7 +41,7 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
   }
 
   void _emitChange() {
-    widget.onChanged(AudioMetadata(
+    widget.onChanged(AudioMetadataModel(
       title: _titleCtrl.text,
       artist: _artistCtrl.text,
       album: _albumCtrl.text,
@@ -52,7 +52,8 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
 
   Future<void> _pickArtwork() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final file =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (file == null) return;
     final bytes = await file.readAsBytes();
     setState(() => _artwork = bytes);
@@ -82,7 +83,8 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Edit metadata', style: Theme.of(context).textTheme.titleLarge),
+              Text('Edit metadata',
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               Center(
                 child: GestureDetector(
@@ -102,14 +104,17 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
                             : Container(
                                 width: 120,
                                 height: 120,
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
                                 child: const Icon(Icons.music_note, size: 40),
                               ),
                       ),
                       CircleAvatar(
                         radius: 16,
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        child: const Icon(Icons.edit, size: 16, color: Colors.white),
+                        child: const Icon(Icons.edit,
+                            size: 16, color: Colors.white),
                       ),
                     ],
                   ),

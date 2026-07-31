@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/di/injection_container.dart' as di;
 import 'core/theme/app_theme.dart';
-import 'presentation/pages/audio_editor_page.dart';
+import 'features/audio_editor/presentation/pages/audio_editor_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

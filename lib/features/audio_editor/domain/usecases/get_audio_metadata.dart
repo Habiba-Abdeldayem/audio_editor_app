@@ -1,11 +1,12 @@
 import 'package:equatable/equatable.dart';
 import 'package:dartz/dartz.dart';
-import '../../core/error/failures.dart';
-import '../../core/usecases/usecase.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../entities/audio_metadata.dart';
 import '../repositories/audio_repository.dart';
 
-class GetAudioMetadata implements UseCase<AudioMetadata, GetAudioMetadataParams> {
+class GetAudioMetadata
+    implements UseCase<AudioMetadata, GetAudioMetadataParams> {
   final AudioRepository repository;
   const GetAudioMetadata(this.repository);
 

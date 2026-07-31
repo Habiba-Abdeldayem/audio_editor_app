@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../core/error/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/audio_track.dart';
 import '../entities/audio_metadata.dart';
 import '../entities/compression_option.dart';

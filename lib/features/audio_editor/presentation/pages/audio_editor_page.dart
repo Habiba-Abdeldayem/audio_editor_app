@@ -2,10 +2,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../core/di/injection_container.dart';
-import '../../core/utils/formatters.dart';
-import '../bloc/audio_editor_bloc.dart';
-import '../bloc/audio_editor_event.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../../core/utils/formatters.dart';
+import '../bloc/audio_editor_cubit.dart';
 import '../bloc/audio_editor_state.dart';
 import '../widgets/compress_sheet.dart';
 import '../widgets/metadata_editor_sheet.dart';
@@ -19,7 +18,7 @@ class AudioEditorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<AudioEditorBloc>(),
+      create: (_) => sl<AudioEditorCubit>(),
       child: const _AudioEditorView(),
     );
   }
@@ -35,30 +34,31 @@ class _AudioEditorView extends StatelessWidget {
     );
     final path = result?.files.single.path;
     if (path != null && context.mounted) {
-      context.read<AudioEditorBloc>().add(AudioFilePicked(path));
+      context.read<AudioEditorCubit>().loadFile(path);
     }
   }
 
   void _openCompressSheet(BuildContext context) {
-    final bloc = context.read<AudioEditorBloc>();
-    bloc.add(const CompressionOptionsRequested());
+    final cubit = context.read<AudioEditorCubit>();
+    cubit.loadCompressionOptions();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) => BlocProvider.value(
-        value: bloc,
-        child: BlocBuilder<AudioEditorBloc, AudioEditorState>(
+        value: cubit,
+        child: BlocBuilder<AudioEditorCubit, AudioEditorState>(
           builder: (context, state) {
             return CompressSheet(
               originalSizeBytes: state.track?.fileSizeBytes ?? 0,
               options: state.compressionOptions,
-              isLoadingOptions: state.compressionStatus == CompressionStatus.loadingOptions,
-              isCompressing: state.compressionStatus == CompressionStatus.compressing,
+              isLoadingOptions:
+                  state.compressionStatus == CompressionStatus.loadingOptions,
+              isCompressing:
+                  state.compressionStatus == CompressionStatus.compressing,
               resultPath: state.compressionStatus == CompressionStatus.done
                   ? state.compressedFilePath
                   : null,
-              onOptionSelected: (bitrate) =>
-                  bloc.add(CompressionConfirmed(bitrate)),
+              onOptionSelected: (bitrate) => cubit.compressAudio(bitrate),
             );
           },
         ),
@@ -67,14 +67,14 @@ class _AudioEditorView extends StatelessWidget {
   }
 
   void _openMetadataSheet(BuildContext context) {
-    final bloc = context.read<AudioEditorBloc>();
-    bloc.add(const MetadataEditorOpened());
+    final cubit = context.read<AudioEditorCubit>();
+    cubit.openMetadataEditor();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) => BlocProvider.value(
-        value: bloc,
-        child: BlocBuilder<AudioEditorBloc, AudioEditorState>(
+        value: cubit,
+        child: BlocBuilder<AudioEditorCubit, AudioEditorState>(
           builder: (context, state) {
             if (state.metadataStatus == MetadataStatus.loading ||
                 state.metadataDraft == null) {
@@ -86,8 +86,8 @@ class _AudioEditorView extends StatelessWidget {
             return MetadataEditorSheet(
               initial: state.metadataDraft!,
               isSaving: state.metadataStatus == MetadataStatus.saving,
-              onChanged: (draft) => bloc.add(MetadataFieldChanged(draft)),
-              onSave: () => bloc.add(const MetadataSaveRequested()),
+              onChanged: (draft) => cubit.updateMetadataField(draft),
+              onSave: () => cubit.saveMetadata(),
             );
           },
         ),
@@ -99,7 +99,7 @@ class _AudioEditorView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Audio Editor')),
-      body: BlocConsumer<AudioEditorBloc, AudioEditorState>(
+      body: BlocConsumer<AudioEditorCubit, AudioEditorState>(
         listenWhen: (previous, current) => current.failure != null,
         listener: (context, state) {
           if (state.failure != null) {
@@ -120,7 +120,28 @@ class _AudioEditorView extends StatelessWidget {
           }
 
           if (state.status == EditorStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
+            final step = state.loadingStep;
+            String message = 'Loading audio...';
+            if (step == LoadingStep.fileMetadata) {
+              message = 'Reading file info...';
+            } else if (step == LoadingStep.waveform) {
+              message = 'Generating waveform...';
+            } else if (step == LoadingStep.playbackPrep) {
+              message = 'Preparing playback...';
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    message,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            );
           }
 
           final track = state.track;
@@ -153,8 +174,7 @@ class _AudioEditorView extends StatelessWidget {
                   samples: track.waveformSamples,
                   duration: track.duration,
                   position: state.position,
-                  onSeek: (pos) =>
-                      context.read<AudioEditorBloc>().add(SeekRequested(pos)),
+                  onSeek: (pos) => context.read<AudioEditorCubit>().seek(pos),
                 ),
                 const SizedBox(height: 12),
                 PlaybackControls(
@@ -162,15 +182,13 @@ class _AudioEditorView extends StatelessWidget {
                   position: state.position,
                   duration: track.duration,
                   onPlayPause: () =>
-                      context.read<AudioEditorBloc>().add(const PlayPauseToggled()),
-                  onSkip: (pos) =>
-                      context.read<AudioEditorBloc>().add(SeekRequested(pos)),
+                      context.read<AudioEditorCubit>().togglePlayPause(),
+                  onSkip: (pos) => context.read<AudioEditorCubit>().seek(pos),
                 ),
                 const SizedBox(height: 20),
                 SplitSection(
                   currentPosition: state.position,
-                  onSplit: () =>
-                      context.read<AudioEditorBloc>().add(const SplitRequested()),
+                  onSplit: () => context.read<AudioEditorCubit>().splitAudio(),
                   resultPaths: state.splitResultPaths,
                 ),
                 const SizedBox(height: 16),
