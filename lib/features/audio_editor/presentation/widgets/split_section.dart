@@ -26,8 +26,8 @@ class SplitSection extends StatelessWidget {
       }
       print('File exists, size: ${await file.length()} bytes');
 
-      // Try basic share instead of shareXFiles
-      await Share.shareFiles([filePath], text: 'Audio file');
+      // Try basic share with text only
+      await Share.share('Audio file: ${p.basename(filePath)}\nPath: $filePath');
       print('Share completed successfully');
     } catch (e) {
       print('Error sharing file: $e');
