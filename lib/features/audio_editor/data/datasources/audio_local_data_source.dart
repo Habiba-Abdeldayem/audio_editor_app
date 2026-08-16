@@ -187,20 +187,41 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     final cmdA = '-y -i "$filePath" -ss 0 -to $splitSeconds -c copy "$partA"';
     final cmdB = '-y -i "$filePath" -ss $splitSeconds -c copy "$partB"';
 
+    print('Splitting audio: $filePath');
+    print('Output directory: ${outDir.path}');
+    print('Part A: $partA');
+    print('Part B: $partB');
+    print('Split point: $splitSeconds seconds');
+
     final sessionA = await FFmpegKit.execute(cmdA);
     final returnCodeA = await sessionA.getReturnCode();
     if (returnCodeA!.isValueSuccess() == false) {
       final logs = await sessionA.getAllLogsAsString();
+      print('FFmpeg failed on first half: $logs');
       throw SplitException('FFmpeg failed on first half: $logs');
     }
+    print('Part A created successfully');
 
     final sessionB = await FFmpegKit.execute(cmdB);
     final returnCodeB = await sessionB.getReturnCode();
     if (returnCodeB!.isValueSuccess() == false) {
       final logs = await sessionB.getAllLogsAsString();
+      print('FFmpeg failed on second half: $logs');
       throw SplitException('FFmpeg failed on second half: $logs');
     }
+    print('Part B created successfully');
 
+    // Verify files exist
+    final fileA = File(partA);
+    final fileB = File(partB);
+    if (!(await fileA.exists())) {
+      throw SplitException('Part A file not created: $partA');
+    }
+    if (!(await fileB.exists())) {
+      throw SplitException('Part B file not created: $partB');
+    }
+
+    print('Split completed successfully');
     return [partA, partB];
   }
 

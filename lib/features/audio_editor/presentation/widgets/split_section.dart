@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path/path.dart' as p;
+import 'dart:io';
 import '../../../../core/utils/formatters.dart';
 
 class SplitSection extends StatelessWidget {
@@ -17,8 +18,17 @@ class SplitSection extends StatelessWidget {
 
   Future<void> _shareFile(String filePath) async {
     try {
+      print('Attempting to share file: $filePath');
+      final file = File(filePath);
+      if (!(await file.exists())) {
+        print('File does not exist: $filePath');
+        return;
+      }
+      print('File exists, size: ${await file.length()} bytes');
       await Share.shareXFiles([XFile(filePath)], text: 'Audio file');
+      print('Share completed successfully');
     } catch (e) {
+      print('Error sharing file: $e');
       debugPrint('Error sharing file: $e');
     }
   }
