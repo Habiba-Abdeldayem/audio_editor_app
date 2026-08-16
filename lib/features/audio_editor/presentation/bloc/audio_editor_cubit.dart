@@ -217,7 +217,10 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
 
     final result = await compressAudioFile(
       CompressAudioFileParams(
-          filePath: track.filePath, bitrateKbps: bitrateKbps),
+        filePath: track.filePath,
+        bitrateKbps: bitrateKbps,
+        totalDuration: track.duration,
+      ),
     );
 
     result.fold(
@@ -235,7 +238,6 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
   void resetFileCompression() {
     emit(state.copyWith(
       fileCompressionStatus: CompressionStatus.idle,
-      fileCompressedPath: null,
       fileCompressingPath: null,
       clearFailure: true,
     ));
@@ -245,27 +247,44 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
     required String filePath,
     required int bitrateKbps,
   }) async {
+    final totalDuration = state.track?.duration ?? Duration.zero;
     emit(state.copyWith(
       fileCompressionStatus: CompressionStatus.compressing,
       fileCompressingPath: filePath,
+      compressionProgress: 0.0,
       clearFailure: true,
     ));
 
     final result = await compressAudioFile(
-      CompressAudioFileParams(filePath: filePath, bitrateKbps: bitrateKbps),
+      CompressAudioFileParams(
+        filePath: filePath,
+        bitrateKbps: bitrateKbps,
+        totalDuration: totalDuration,
+        onProgress: (progress) {
+          if (!isClosed) {
+            emit(state.copyWith(compressionProgress: progress));
+          }
+        },
+      ),
     );
 
     result.fold(
       (failure) => emit(state.copyWith(
         fileCompressionStatus: CompressionStatus.error,
         fileCompressingPath: null,
+        compressionProgress: null,
         failure: failure,
       )),
-      (outputPath) => emit(state.copyWith(
-        fileCompressionStatus: CompressionStatus.done,
-        fileCompressedPath: outputPath,
-        fileCompressingPath: null,
-      )),
+      (outputPath) {
+        final updated = Map<String, String>.from(state.compressedBySplitPath);
+        updated[filePath] = outputPath;
+        emit(state.copyWith(
+          fileCompressionStatus: CompressionStatus.done,
+          fileCompressingPath: null,
+          compressionProgress: null,
+          compressedBySplitPath: updated,
+        ));
+      },
     );
   }
 

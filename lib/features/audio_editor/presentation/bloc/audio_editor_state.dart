@@ -32,9 +32,9 @@ class AudioEditorState extends Equatable {
 
   // File compression (for split results etc.)
   final CompressionStatus fileCompressionStatus;
-  final String? fileCompressedPath;
   final String? fileCompressingPath;
   final double? compressionProgress;
+  final Map<String, String> compressedBySplitPath;
 
   // Metadata
   final MetadataStatus metadataStatus;
@@ -54,9 +54,9 @@ class AudioEditorState extends Equatable {
     this.compressionOptions = const [],
     this.compressedFilePath,
     this.fileCompressionStatus = CompressionStatus.idle,
-    this.fileCompressedPath,
     this.fileCompressingPath,
     this.compressionProgress,
+    this.compressedBySplitPath = const {},
     this.metadataStatus = MetadataStatus.idle,
     this.metadata,
     this.metadataDraft,
@@ -84,9 +84,9 @@ class AudioEditorState extends Equatable {
     List<CompressionOption>? compressionOptions,
     String? compressedFilePath,
     CompressionStatus? fileCompressionStatus,
-    String? fileCompressedPath,
     String? fileCompressingPath,
     double? compressionProgress,
+    Map<String, String>? compressedBySplitPath,
     MetadataStatus? metadataStatus,
     AudioMetadata? metadata,
     AudioMetadataModel? metadataDraft,
@@ -105,9 +105,10 @@ class AudioEditorState extends Equatable {
       compressedFilePath: compressedFilePath ?? this.compressedFilePath,
       fileCompressionStatus:
           fileCompressionStatus ?? this.fileCompressionStatus,
-      fileCompressedPath: fileCompressedPath ?? this.fileCompressedPath,
       fileCompressingPath: fileCompressingPath ?? this.fileCompressingPath,
       compressionProgress: compressionProgress ?? this.compressionProgress,
+      compressedBySplitPath:
+          compressedBySplitPath ?? this.compressedBySplitPath,
       metadataStatus: metadataStatus ?? this.metadataStatus,
       metadata: metadata ?? this.metadata,
       metadataDraft: metadataDraft ?? this.metadataDraft,
@@ -128,9 +129,9 @@ class AudioEditorState extends Equatable {
         compressionOptions,
         compressedFilePath,
         fileCompressionStatus,
-        fileCompressedPath,
         fileCompressingPath,
         compressionProgress,
+        compressedBySplitPath,
         metadataStatus,
         metadata,
         metadataDraft,

@@ -3,6 +3,7 @@ import '../../../../core/error/failures.dart';
 import '../entities/audio_track.dart';
 import '../entities/audio_metadata.dart';
 import '../entities/compression_option.dart';
+import '../../data/datasources/audio_local_data_source.dart' show OutputFileInfo;
 
 /// Domain-facing contract. The presentation layer (via use cases) depends
 /// only on this abstraction; `data/repositories/audio_repository_impl.dart`
@@ -47,6 +48,7 @@ abstract class AudioRepository {
   Future<Either<Failure, String>> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    required Duration totalDuration,
     void Function(double progress)? onProgress,
   });
 
@@ -63,4 +65,6 @@ abstract class AudioRepository {
     required String filePath,
     required String newName,
   });
+
+  Future<Either<Failure, List<OutputFileInfo>>> listOutputFiles(String folderName);
 }

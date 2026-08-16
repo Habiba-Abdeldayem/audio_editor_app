@@ -15,6 +15,7 @@ class SplitSection extends StatefulWidget {
   final List<String>? resultPaths;
   final Future<void> Function(String filePath, String newName)? onRename;
   final void Function(String filePath)? onCompress;
+  final Map<String, String>? compressedBySplitPath;
 
   const SplitSection({
     super.key,
@@ -24,6 +25,7 @@ class SplitSection extends StatefulWidget {
     this.resultPaths,
     this.onRename,
     this.onCompress,
+    this.compressedBySplitPath,
   });
 
   @override
@@ -208,7 +210,7 @@ class _SplitSectionState extends State<SplitSection> {
               Text(l10n.createdFiles,
                   style: theme.textTheme.labelMedium),
               const SizedBox(height: 8),
-              for (final path in widget.resultPaths!)
+              for (final path in widget.resultPaths!) ...[
                 _FileTile(
                   path: path,
                   fileSize: _fileSizes[path],
@@ -218,6 +220,17 @@ class _SplitSectionState extends State<SplitSection> {
                   onCompress: () => widget.onCompress?.call(path),
                   onOpenFolder: () => _openInFolder(context, path),
                 ),
+                if (widget.compressedBySplitPath != null &&
+                    widget.compressedBySplitPath!.containsKey(path))
+                  _CompressedTile(
+                    compressedPath: widget.compressedBySplitPath![path]!,
+                    formatSize: _formatSize,
+                    onShare: () =>
+                        _shareFile(context, widget.compressedBySplitPath![path]!),
+                    onOpenFolder: () => _openInFolder(
+                        context, widget.compressedBySplitPath![path]!),
+                  ),
+              ],
             ],
           ],
         ),
@@ -315,6 +328,112 @@ class _FileTile extends StatelessWidget {
                 onTap: onShare,
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompressedTile extends StatelessWidget {
+  final String compressedPath;
+  final String Function(int) formatSize;
+  final VoidCallback onShare;
+  final VoidCallback onOpenFolder;
+
+  const _CompressedTile({
+    required this.compressedPath,
+    required this.formatSize,
+    required this.onShare,
+    required this.onOpenFolder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final name = p.basenameWithoutExtension(compressedPath);
+    final ext = p.extension(compressedPath);
+    final l10n = AppLocalizations.of(context);
+
+    int? sizeBytes;
+    try {
+      final file = File(compressedPath);
+      if (file.existsSync()) sizeBytes = file.lengthSync();
+    } catch (_) {}
+
+    return Container(
+      margin: const EdgeInsets.only(left: 24, bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.compress,
+                  size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  l10n.compressed,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  name,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 26),
+            child: Row(
+              children: [
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    sizeBytes != null
+                        ? '${formatSize(sizeBytes)}  ·  $ext'
+                        : ext,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                _ActionIcon(
+                  icon: Icons.folder_open,
+                  tooltip: l10n.showInFolder,
+                  onTap: onOpenFolder,
+                ),
+                _ActionIcon(
+                  icon: Icons.share,
+                  tooltip: l10n.share,
+                  onTap: onShare,
+                ),
+              ],
+            ),
           ),
         ],
       ),

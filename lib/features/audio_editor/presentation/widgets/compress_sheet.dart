@@ -11,6 +11,7 @@ class CompressSheet extends StatelessWidget {
   final bool isError;
   final String? errorMessage;
   final String? resultPath;
+  final double? progress;
   final ValueChanged<int> onOptionSelected;
 
   const CompressSheet({
@@ -23,11 +24,13 @@ class CompressSheet extends StatelessWidget {
     this.isError = false,
     this.errorMessage,
     this.resultPath,
+    this.progress,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -57,7 +60,29 @@ class CompressSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Column(
                   children: [
-                    const CircularProgressIndicator(),
+                    SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            strokeWidth: 6,
+                            value: progress,
+                            backgroundColor:
+                                theme.colorScheme.surfaceContainerHighest,
+                          ),
+                          Text(
+                            progress != null
+                                ? '${(progress! * 100).round()}%'
+                                : '',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Text(l10n.compressing),
                   ],
@@ -92,36 +117,54 @@ class CompressSheet extends StatelessWidget {
               )
             else
               Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final option = options[index];
-                    final savingPercent = originalSizeBytes == 0
-                        ? 0
-                        : (100 -
-                                (option.estimatedBytes /
-                                        originalSizeBytes *
-                                        100))
-                            .clamp(0, 100)
-                            .round();
-                    final subtitle = savingPercent > 0
-                        ? '${Formatters.fileSize(originalSizeBytes)} → '
-                            '~${Formatters.fileSize(option.estimatedBytes)} '
-                            '($savingPercent% ${l10n.smaller})'
-                        : '${Formatters.fileSize(originalSizeBytes)} → '
-                            '~${Formatters.fileSize(option.estimatedBytes)}';
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(option.label),
-                      subtitle: Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: Text(subtitle),
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () =>
-                          onOptionSelected(option.bitrateKbps),
+                child: Builder(
+                  builder: (context) {
+                    final theme = Theme.of(context);
+                    final filtered = originalSizeBytes > 0
+                        ? options
+                            .where(
+                                (o) => o.estimatedBytes < originalSizeBytes)
+                            .toList()
+                        : options;
+                    if (filtered.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Center(
+                          child: Text(
+                            l10n.fileAlreadySmall,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      );
+                    }
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final option = filtered[index];
+                        final savingPercent =
+                            (100 - (option.estimatedBytes / originalSizeBytes * 100))
+                                .clamp(0, 100)
+                                .round();
+                        final subtitle = savingPercent > 0
+                            ? '${Formatters.fileSize(originalSizeBytes)} → '
+                                '~${Formatters.fileSize(option.estimatedBytes)} '
+                                '($savingPercent% ${l10n.smaller})'
+                            : '${Formatters.fileSize(originalSizeBytes)} → '
+                                '~${Formatters.fileSize(option.estimatedBytes)}';
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(option.label),
+                          subtitle: Directionality(
+                            textDirection: TextDirection.ltr,
+                            child: Text(subtitle),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () =>
+                              onOptionSelected(option.bitrateKbps),
+                        );
+                      },
                     );
                   },
                 ),
