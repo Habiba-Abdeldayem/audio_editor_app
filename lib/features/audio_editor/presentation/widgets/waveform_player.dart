@@ -43,36 +43,62 @@ class _WaveformPlayerState extends State<WaveformPlayer> {
     widget.onSeek(Duration(milliseconds: ms));
   }
 
+  void _onSliderChanged(double value) {
+    final ms = (widget.duration.inMilliseconds * value).round();
+    widget.onSeek(Duration(milliseconds: ms));
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
     final track = Theme.of(context).colorScheme.surfaceContainerHighest;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragStart: (d) =>
-              _updateFromLocalX(d.localPosition.dx, width),
-          onHorizontalDragUpdate: (d) =>
-              _updateFromLocalX(d.localPosition.dx, width),
-          onHorizontalDragEnd: (_) => setState(() => _dragProgress = null),
-          onTapUp: (d) => _updateFromLocalX(d.localPosition.dx, width),
-          child: SizedBox(
-            height: widget.height,
-            width: width,
-            child: CustomPaint(
-              painter: _WaveformPainter(
-                samples: widget.samples,
-                progress: _progress,
-                playedColor: color,
-                unplayedColor: track,
+    return Column(
+      children: [
+        // Waveform display
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragStart: (d) =>
+                  _updateFromLocalX(d.localPosition.dx, width),
+              onHorizontalDragUpdate: (d) =>
+                  _updateFromLocalX(d.localPosition.dx, width),
+              onHorizontalDragEnd: (_) => setState(() => _dragProgress = null),
+              onTapUp: (d) => _updateFromLocalX(d.localPosition.dx, width),
+              child: SizedBox(
+                height: widget.height,
+                width: width,
+                child: CustomPaint(
+                  painter: _WaveformPainter(
+                    samples: widget.samples,
+                    progress: _progress,
+                    playedColor: color,
+                    unplayedColor: track,
+                  ),
+                ),
               ),
-            ),
+            );
+          },
+        ),
+        // Progress bar with seek thumb
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 4,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+            activeTrackColor: color,
+            inactiveTrackColor: track,
+            thumbColor: color,
+            overlayColor: color.withOpacity(0.2),
           ),
-        );
-      },
+          child: Slider(
+            value: _progress,
+            onChanged: _onSliderChanged,
+          ),
+        ),
+      ],
     );
   }
 }
