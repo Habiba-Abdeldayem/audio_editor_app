@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:path/path.dart' as p;
 import '../../../../core/utils/formatters.dart';
 
@@ -13,6 +14,14 @@ class SplitSection extends StatelessWidget {
     required this.onSplit,
     this.resultPaths,
   });
+
+  Future<void> _shareFile(String filePath) async {
+    try {
+      await Share.shareXFiles([XFile(filePath)], text: 'Audio file');
+    } catch (e) {
+      debugPrint('Error sharing file: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,24 +55,39 @@ class SplitSection extends StatelessWidget {
                   style: Theme.of(context).textTheme.labelMedium),
               const SizedBox(height: 4),
               for (final path in resultPaths!)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      path.split('/').last,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            path.split('/').last,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                           ),
-                    ),
-                    Text(
-                      path,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 10,
+                          Text(
+                            path,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 10,
+                                    ),
                           ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () => _shareFile(path),
+                      icon: const Icon(Icons.share),
+                      tooltip: 'Share',
+                      iconSize: 20,
+                    ),
                   ],
                 ),
               const SizedBox(height: 8),
