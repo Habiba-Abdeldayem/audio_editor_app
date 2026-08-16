@@ -149,16 +149,16 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     // Try to get the external storage directory
     final externalDir = await getExternalStorageDirectory();
     if (externalDir != null) {
-      // Navigate to the root of external storage and use Downloads
+      // Navigate to the root of external storage and use Documents folder
       final storageRoot = externalDir.parent.parent
           .parent; // Go up from /storage/emulated/0/Android/data/... to /storage/emulated/0
-      final downloadsPath =
-          Directory(p.join(storageRoot.path, 'Download', 'AudioEditor'));
+      final documentsPath =
+          Directory(p.join(storageRoot.path, 'Documents', 'AudioEditor'));
 
-      if (!downloadsPath.existsSync()) {
-        downloadsPath.createSync(recursive: true);
+      if (!documentsPath.existsSync()) {
+        documentsPath.createSync(recursive: true);
       }
-      return downloadsPath;
+      return documentsPath;
     }
 
     // Fallback to app documents
