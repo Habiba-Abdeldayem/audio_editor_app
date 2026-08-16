@@ -145,25 +145,42 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   }
 
   Future<Directory> _outputDir() async {
-    // On Android, use the standard external storage path which is visible
-    // Try to get the external storage directory
+    // On Android, use the root of external storage for maximum visibility
     final externalDir = await getExternalStorageDirectory();
     if (externalDir != null) {
-      // Navigate to the root of external storage and use Documents folder
+      // Navigate to the root of external storage
       final storageRoot = externalDir.parent.parent
           .parent; // Go up from /storage/emulated/0/Android/data/... to /storage/emulated/0
-      final documentsPath =
-          Directory(p.join(storageRoot.path, 'Documents', 'AudioEditor'));
+      final audioEditorPath =
+          Directory(p.join(storageRoot.path, 'AudioEditor'));
 
-      if (!documentsPath.existsSync()) {
-        documentsPath.createSync(recursive: true);
+      if (!audioEditorPath.existsSync()) {
+        audioEditorPath.createSync(recursive: true);
       }
-      return documentsPath;
+      return audioEditorPath;
     }
 
     // Fallback to app documents
     final appDir = await getApplicationDocumentsDirectory();
     return Directory(p.join(appDir.path, 'audio_editor_output'));
+  }
+
+  Future<Directory> _splitOutputDir() async {
+    final baseDir = await _outputDir();
+    final splitDir = Directory(p.join(baseDir.path, 'Split'));
+    if (!splitDir.existsSync()) {
+      splitDir.createSync(recursive: true);
+    }
+    return splitDir;
+  }
+
+  Future<Directory> _compressOutputDir() async {
+    final baseDir = await _outputDir();
+    final compressDir = Directory(p.join(baseDir.path, 'Compressed'));
+    if (!compressDir.existsSync()) {
+      compressDir.createSync(recursive: true);
+    }
+    return compressDir;
   }
 
   @override
@@ -172,10 +189,11 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     required Duration splitPoint,
   }) async {
     _assertM4a(filePath);
-    final outDir = await _outputDir();
+    final outDir = await _splitOutputDir();
     final baseName = p.basenameWithoutExtension(filePath);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
 
+    // More user-friendly naming with timestamp
     final partA = p.join(outDir.path, '${baseName}_part1_$timestamp.m4a');
     final partB = p.join(outDir.path, '${baseName}_part2_$timestamp.m4a');
 
@@ -231,7 +249,7 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     required int bitrateKbps,
   }) async {
     _assertM4a(filePath);
-    final outDir = await _outputDir();
+    final outDir = await _compressOutputDir();
     final baseName = p.basenameWithoutExtension(filePath);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final outputPath =
@@ -240,13 +258,20 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     final cmd =
         '-y -i "$filePath" -c:a aac -b:a ${bitrateKbps}k -movflags +faststart "$outputPath"';
 
+    print('Compressing audio: $filePath');
+    print('Output directory: ${outDir.path}');
+    print('Output path: $outputPath');
+    print('Bitrate: ${bitrateKbps}kbps');
+
     final session = await FFmpegKit.execute(cmd);
     final returnCode = await session.getReturnCode();
     if (returnCode!.isValueSuccess() == false) {
       final logs = await session.getAllLogsAsString();
+      print('FFmpeg compression failed: $logs');
       throw CompressionException('FFmpeg compression failed: $logs');
     }
 
+    print('Compression completed successfully');
     return outputPath;
   }
 
