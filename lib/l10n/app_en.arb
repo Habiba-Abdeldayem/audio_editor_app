@@ -84,7 +84,19 @@
 
   "chooseSizeToRetry": "Choose a size below to try again.",
   "@chooseSizeToRetry": {
-    "description": "Hint shown after a compression failure."
+    "description": "Shown under error to prompt retry."
+  },
+
+  "smaller": "smaller",
+  "currentFileSize": "Current file size: {size}",
+  "@currentFileSize": {
+    "description": "Shows the current file size in the compress sheet.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "5.2 MB"
+      }
+    }
   },
 
   "editMetadata": "Edit metadata",

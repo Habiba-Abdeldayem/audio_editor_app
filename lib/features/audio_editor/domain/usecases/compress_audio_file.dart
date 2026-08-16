@@ -13,6 +13,7 @@ class CompressAudioFile implements UseCase<String, CompressAudioFileParams> {
     return repository.compressAudio(
       filePath: params.filePath,
       bitrateKbps: params.bitrateKbps,
+      onProgress: params.onProgress,
     );
   }
 }
@@ -20,8 +21,12 @@ class CompressAudioFile implements UseCase<String, CompressAudioFileParams> {
 class CompressAudioFileParams extends Equatable {
   final String filePath;
   final int bitrateKbps;
-  const CompressAudioFileParams(
-      {required this.filePath, required this.bitrateKbps});
+  final void Function(double progress)? onProgress;
+  const CompressAudioFileParams({
+    required this.filePath,
+    required this.bitrateKbps,
+    this.onProgress,
+  });
   @override
   List<Object?> get props => [filePath, bitrateKbps];
 }

@@ -91,27 +91,39 @@ class CompressSheet extends StatelessWidget {
                 ),
               )
             else
-              ...options.map((option) {
-                final savingPercent = originalSizeBytes == 0
-                    ? 0
-                    : (100 - (option.estimatedBytes / originalSizeBytes * 100))
-                        .clamp(0, 100)
-                        .round();
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(option.label),
-                  subtitle: Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Text(
-                      '${Formatters.fileSize(originalSizeBytes)} → '
-                      '~${Formatters.fileSize(option.estimatedBytes)} '
-                      '(~$savingPercent% smaller)',
-                    ),
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => onOptionSelected(option.bitrateKbps),
-                );
-              }),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: options.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final option = options[index];
+                    final savingPercent = originalSizeBytes == 0
+                        ? 0
+                        : (100 -
+                                (option.estimatedBytes /
+                                        originalSizeBytes *
+                                        100))
+                            .clamp(0, 100)
+                            .round();
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(option.label),
+                      subtitle: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          '${Formatters.fileSize(originalSizeBytes)} → '
+                          '~${Formatters.fileSize(option.estimatedBytes)} '
+                          '(~$savingPercent% smaller)',
+                        ),
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () =>
+                          onOptionSelected(option.bitrateKbps),
+                    );
+                  },
+                ),
+              ),
           ],
         ),
       ),

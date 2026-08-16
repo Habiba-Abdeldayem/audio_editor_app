@@ -34,6 +34,7 @@ class AudioEditorState extends Equatable {
   final CompressionStatus fileCompressionStatus;
   final String? fileCompressedPath;
   final String? fileCompressingPath;
+  final double? compressionProgress;
 
   // Metadata
   final MetadataStatus metadataStatus;
@@ -55,6 +56,7 @@ class AudioEditorState extends Equatable {
     this.fileCompressionStatus = CompressionStatus.idle,
     this.fileCompressedPath,
     this.fileCompressingPath,
+    this.compressionProgress,
     this.metadataStatus = MetadataStatus.idle,
     this.metadata,
     this.metadataDraft,
@@ -84,6 +86,7 @@ class AudioEditorState extends Equatable {
     CompressionStatus? fileCompressionStatus,
     String? fileCompressedPath,
     String? fileCompressingPath,
+    double? compressionProgress,
     MetadataStatus? metadataStatus,
     AudioMetadata? metadata,
     AudioMetadataModel? metadataDraft,
@@ -104,6 +107,7 @@ class AudioEditorState extends Equatable {
           fileCompressionStatus ?? this.fileCompressionStatus,
       fileCompressedPath: fileCompressedPath ?? this.fileCompressedPath,
       fileCompressingPath: fileCompressingPath ?? this.fileCompressingPath,
+      compressionProgress: compressionProgress ?? this.compressionProgress,
       metadataStatus: metadataStatus ?? this.metadataStatus,
       metadata: metadata ?? this.metadata,
       metadataDraft: metadataDraft ?? this.metadataDraft,
@@ -126,6 +130,7 @@ class AudioEditorState extends Equatable {
         fileCompressionStatus,
         fileCompressedPath,
         fileCompressingPath,
+        compressionProgress,
         metadataStatus,
         metadata,
         metadataDraft,

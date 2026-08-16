@@ -33,35 +33,38 @@ class PlaybackControls extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              iconSize: 32,
-              icon: const Icon(Icons.replay_10),
-              tooltip: l10n.back10s,
-              onPressed: () {
-                final target = position - const Duration(seconds: 10);
-                onSkip(target < Duration.zero ? Duration.zero : target);
-              },
-            ),
-            const SizedBox(width: 12),
-            IconButton.filled(
-              iconSize: 40,
-              icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-              onPressed: onPlayPause,
-            ),
-            const SizedBox(width: 12),
-            IconButton(
-              iconSize: 32,
-              icon: const Icon(Icons.forward_10),
-              tooltip: l10n.forward10s,
-              onPressed: () {
-                final target = position + const Duration(seconds: 10);
-                onSkip(target > duration ? duration : target);
-              },
-            ),
-          ],
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                iconSize: 32,
+                icon: const Icon(Icons.replay_10),
+                tooltip: l10n.back10s,
+                onPressed: () {
+                  final target = position - const Duration(seconds: 10);
+                  onSkip(target < Duration.zero ? Duration.zero : target);
+                },
+              ),
+              const SizedBox(width: 12),
+              IconButton.filled(
+                iconSize: 40,
+                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                onPressed: onPlayPause,
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                iconSize: 32,
+                icon: const Icon(Icons.forward_10),
+                tooltip: l10n.forward10s,
+                onPressed: () {
+                  final target = position + const Duration(seconds: 10);
+                  onSkip(target > duration ? duration : target);
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );

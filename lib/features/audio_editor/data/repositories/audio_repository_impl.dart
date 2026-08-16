@@ -225,11 +225,13 @@ class AudioRepositoryImpl implements AudioRepository {
   Future<Either<Failure, String>> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    void Function(double progress)? onProgress,
   }) async {
     try {
       final outputPath = await localDataSource.compressAudio(
         filePath: filePath,
         bitrateKbps: bitrateKbps,
+        onProgress: onProgress,
       );
       return Right(outputPath);
     } on CompressionException catch (e) {

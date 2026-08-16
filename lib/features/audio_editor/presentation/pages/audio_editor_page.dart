@@ -156,6 +156,11 @@ class _AudioEditorView extends StatelessWidget {
         title: Text(AppLocalizations.of(context).audioEditorAppBarTitle),
         actions: [
           IconButton(
+            icon: const Icon(Icons.folder_open),
+            tooltip: AppLocalizations.of(context).chooseDifferentFile,
+            onPressed: () => _pickFile(context),
+          ),
+          IconButton(
             icon: const Icon(Icons.settings),
             tooltip: AppLocalizations.of(context).settings,
             onPressed: () {

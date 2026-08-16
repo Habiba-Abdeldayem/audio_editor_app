@@ -47,6 +47,7 @@ abstract class AudioRepository {
   Future<Either<Failure, String>> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    void Function(double progress)? onProgress,
   });
 
   Future<Either<Failure, AudioMetadata>> readMetadata(String filePath);
