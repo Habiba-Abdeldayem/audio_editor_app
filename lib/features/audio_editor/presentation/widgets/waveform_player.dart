@@ -91,7 +91,7 @@ class _WaveformPlayerState extends State<WaveformPlayer> {
             activeTrackColor: color,
             inactiveTrackColor: track,
             thumbColor: color,
-            overlayColor: color.withOpacity(0.2),
+            overlayColor: color.withValues(alpha: 0.2),
           ),
           child: Slider(
             value: _progress,

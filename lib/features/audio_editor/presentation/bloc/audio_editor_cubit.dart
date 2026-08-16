@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/usecases/compress_audio_file.dart';
 import '../../domain/usecases/get_audio_metadata.dart';
 import '../../domain/usecases/get_compression_options.dart';
@@ -131,6 +132,26 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
   Future<void> splitAudio() async {
     final track = state.track;
     if (track == null) return;
+
+    // Prevent splitting at the beginning of the audio
+    if (state.position.inSeconds < 1) {
+      emit(state.copyWith(
+        status: EditorStatus.error,
+        failure: const ValidationFailure(
+            'Please play the audio and seek to a position before splitting'),
+      ));
+      return;
+    }
+
+    // Prevent splitting at the very end of the audio
+    if (state.position >= track.duration - const Duration(seconds: 1)) {
+      emit(state.copyWith(
+        status: EditorStatus.error,
+        failure:
+            const ValidationFailure('Cannot split at the end of the audio'),
+      ));
+      return;
+    }
 
     final result = await splitAudioFile(
       SplitAudioFileParams(

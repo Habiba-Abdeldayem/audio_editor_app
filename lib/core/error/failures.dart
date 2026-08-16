@@ -17,7 +17,8 @@ class FileAccessFailure extends Failure {
 }
 
 class UnsupportedFormatFailure extends Failure {
-  const UnsupportedFormatFailure([super.message = 'Only .m4a files are supported.']);
+  const UnsupportedFormatFailure(
+      [super.message = 'Only .m4a files are supported.']);
 }
 
 class PlaybackFailure extends Failure {
@@ -29,11 +30,16 @@ class SplitFailure extends Failure {
 }
 
 class CompressionFailure extends Failure {
-  const CompressionFailure([super.message = 'Could not compress the audio file.']);
+  const CompressionFailure(
+      [super.message = 'Could not compress the audio file.']);
 }
 
 class MetadataFailure extends Failure {
   const MetadataFailure([super.message = 'Could not read or write metadata.']);
+}
+
+class ValidationFailure extends Failure {
+  const ValidationFailure([super.message = 'Validation failed.']);
 }
 
 class UnknownFailure extends Failure {
