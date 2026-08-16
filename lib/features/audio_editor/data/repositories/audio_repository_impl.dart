@@ -116,7 +116,33 @@ class AudioRepositoryImpl implements AudioRepository {
     try {
       final duration = await localDataSource.getDuration(filePath);
 
+      // Calculate bitrate needed to achieve target file sizes
+      // bitrate (kbps) = (target_size_bytes * 8) / (duration_seconds * 1000)
+      final durationSeconds = duration.inSeconds.toDouble();
+      final bitrateFor16MB = durationSeconds > 0
+          ? ((AppConstants.targetFileSize16MB * 8) / (durationSeconds * 1000))
+              .round()
+          : 128;
+      final bitrateFor8MB = durationSeconds > 0
+          ? ((AppConstants.targetFileSize8MB * 8) / (durationSeconds * 1000))
+              .round()
+          : 64;
+      final bitrateFor4MB = durationSeconds > 0
+          ? ((AppConstants.targetFileSize4MB * 8) / (durationSeconds * 1000))
+              .round()
+          : 32;
+
+      // Ensure minimum bitrate of 16 kbps
+      final safeBitrate16MB = bitrateFor16MB.clamp(16, 320);
+      final safeBitrate8MB = bitrateFor8MB.clamp(16, 320);
+      final safeBitrate4MB = bitrateFor4MB.clamp(16, 320);
+
       const presets = [
+        (
+          CompressionQuality.veryHigh,
+          AppConstants.veryHighQualityBitrate,
+          'Very High (320 kbps)'
+        ),
         (
           CompressionQuality.high,
           AppConstants.highQualityBitrate,
@@ -133,11 +159,22 @@ class AudioRepositoryImpl implements AudioRepository {
           'Low (64 kbps)'
         ),
         (
+          CompressionQuality.veryLow,
+          AppConstants.veryLowQualityBitrate,
+          'Very Low (32 kbps)'
+        ),
+        (
           CompressionQuality.voice,
           AppConstants.voiceOptimizedBitrate,
-          'Voice-optimized (32 kbps)'
+          'Voice (24 kbps)'
+        ),
+        (
+          CompressionQuality.ultraLow,
+          AppConstants.ultraLowQualityBitrate,
+          'Ultra Low (16 kbps)'
         ),
       ];
+
       final options = presets
           .map((preset) => CompressionOption(
                 quality: preset.$1,
@@ -150,7 +187,33 @@ class AudioRepositoryImpl implements AudioRepository {
               ))
           .toList();
 
-      return Right(options);
+      // Add target size options
+      final targetSizeOptions = [
+        CompressionOption(
+          quality: CompressionQuality.low,
+          bitrateKbps: safeBitrate16MB,
+          label: 'Target: ~16 MB',
+          estimatedBytes: AppConstants.targetFileSize16MB,
+          isTargetSize: true,
+        ),
+        CompressionOption(
+          quality: CompressionQuality.veryLow,
+          bitrateKbps: safeBitrate8MB,
+          label: 'Target: ~8 MB',
+          estimatedBytes: AppConstants.targetFileSize8MB,
+          isTargetSize: true,
+        ),
+        CompressionOption(
+          quality: CompressionQuality.ultraLow,
+          bitrateKbps: safeBitrate4MB,
+          label: 'Target: ~4 MB',
+          estimatedBytes: AppConstants.targetFileSize4MB,
+          isTargetSize: true,
+        ),
+      ];
+
+      // Combine all options, with target size options at the end
+      return Right([...options, ...targetSizeOptions]);
     } on FileAccessException catch (e) {
       return Left(FileAccessFailure(e.message));
     } catch (e) {
