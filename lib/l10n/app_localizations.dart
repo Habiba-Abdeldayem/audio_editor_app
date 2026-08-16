@@ -188,11 +188,17 @@ abstract class AppLocalizations {
   /// **'Compression failed.'**
   String get compressionFailed;
 
-  /// Hint shown after a compression failure.
+  /// Shown under error to prompt retry.
   ///
   /// In en, this message translates to:
   /// **'Choose a size below to try again.'**
   String get chooseSizeToRetry;
+
+  /// No description provided for @smaller.
+  ///
+  /// In en, this message translates to:
+  /// **'smaller'**
+  String get smaller;
 
   /// Title of the metadata editor bottom sheet.
   ///

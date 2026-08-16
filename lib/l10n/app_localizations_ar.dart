@@ -59,6 +59,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chooseSizeToRetry => 'اختر حجمًا أدناه للمحاولة مرة أخرى.';
 
   @override
+  String get smaller => 'smaller';
+
+  @override
   String get editMetadata => 'تعديل البيانات الوصفية';
 
   @override

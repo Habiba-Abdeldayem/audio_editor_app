@@ -88,16 +88,6 @@
   },
 
   "smaller": "smaller",
-  "currentFileSize": "Current file size: {size}",
-  "@currentFileSize": {
-    "description": "Shows the current file size in the compress sheet.",
-    "placeholders": {
-      "size": {
-        "type": "String",
-        "example": "5.2 MB"
-      }
-    }
-  },
 
   "editMetadata": "Edit metadata",
   "@editMetadata": {

@@ -59,6 +59,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseSizeToRetry => 'Choose a size below to try again.';
 
   @override
+  String get smaller => 'smaller';
+
+  @override
   String get editMetadata => 'Edit metadata';
 
   @override

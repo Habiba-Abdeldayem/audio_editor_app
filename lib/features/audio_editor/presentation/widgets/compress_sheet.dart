@@ -106,16 +106,18 @@ class CompressSheet extends StatelessWidget {
                                         100))
                             .clamp(0, 100)
                             .round();
+                    final subtitle = savingPercent > 0
+                        ? '${Formatters.fileSize(originalSizeBytes)} → '
+                            '~${Formatters.fileSize(option.estimatedBytes)} '
+                            '($savingPercent% ${l10n.smaller})'
+                        : '${Formatters.fileSize(originalSizeBytes)} → '
+                            '~${Formatters.fileSize(option.estimatedBytes)}';
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(option.label),
                       subtitle: Directionality(
                         textDirection: TextDirection.ltr,
-                        child: Text(
-                          '${Formatters.fileSize(originalSizeBytes)} → '
-                          '~${Formatters.fileSize(option.estimatedBytes)} '
-                          '(~$savingPercent% smaller)',
-                        ),
+                        child: Text(subtitle),
                       ),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () =>
