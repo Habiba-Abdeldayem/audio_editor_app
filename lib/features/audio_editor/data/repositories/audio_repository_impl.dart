@@ -214,6 +214,8 @@ class AudioRepositoryImpl implements AudioRepository {
 
       // Combine all options, with target size options at the end
       return Right([...options, ...targetSizeOptions]);
+    } on UnsupportedFormatException catch (e) {
+      return Left(UnsupportedFormatFailure(e.message));
     } on FileAccessException catch (e) {
       return Left(FileAccessFailure(e.message));
     } catch (e) {
@@ -225,15 +227,19 @@ class AudioRepositoryImpl implements AudioRepository {
   Future<Either<Failure, String>> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    required Duration totalDuration,
     void Function(double progress)? onProgress,
   }) async {
     try {
       final outputPath = await localDataSource.compressAudio(
         filePath: filePath,
         bitrateKbps: bitrateKbps,
+        totalDuration: totalDuration,
         onProgress: onProgress,
       );
       return Right(outputPath);
+    } on UnsupportedFormatException catch (e) {
+      return Left(UnsupportedFormatFailure(e.message));
     } on CompressionException catch (e) {
       return Left(CompressionFailure(e.message));
     } catch (e) {
@@ -292,6 +298,14 @@ class AudioRepositoryImpl implements AudioRepository {
       return Right(newPath);
     } on FileAccessException catch (e) {
       return Left(FileAccessFailure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<OutputFileInfo>>> listOutputFiles(String folderName) async {
+    try {
+      final files = await localDataSource.listOutputFiles(folderName);
+      return Right(files);
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }

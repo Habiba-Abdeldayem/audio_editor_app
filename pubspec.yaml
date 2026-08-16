@@ -27,13 +27,13 @@ dependencies:
   audio_waveforms: ^1.1.1
 
   # Splitting / compressing (FFmpeg)
-  ffmpeg_kit_flutter_new: ^4.6.2
+  ffmpeg_kit_flutter_new_min_gpl: ^2.6.0
 
   # File pick / paths
   file_picker: ^8.1.2
   path_provider: ^2.1.4
   path: ^1.9.0
-  permission_handler: ^11.3.1
+
   url_launcher: ^6.2.2
 
   # Metadata read/write (title, artist, artwork tags on m4a/mp4 container)

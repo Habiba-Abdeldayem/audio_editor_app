@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:audio_waveforms/audio_waveforms.dart' as waveforms;
 import 'package:audiotags/audiotags.dart';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit_config.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:path/path.dart' as p;
@@ -37,6 +37,7 @@ abstract class AudioLocalDataSource {
   Future<String> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    required Duration totalDuration,
     void Function(double progress)? onProgress,
   });
 
@@ -56,6 +57,22 @@ abstract class AudioLocalDataSource {
   /// Renames the file at [filePath] to [newName] (must include extension).
   /// Returns the new full path on success.
   Future<String> renameFile({required String filePath, required String newName});
+
+  Future<List<OutputFileInfo>> listOutputFiles(String folderName);
+}
+
+class OutputFileInfo {
+  final String name;
+  final String path;
+  final int sizeBytes;
+  final DateTime modified;
+
+  const OutputFileInfo({
+    required this.name,
+    required this.path,
+    required this.sizeBytes,
+    required this.modified,
+  });
 }
 
 class AudioLocalDataSourceImpl implements AudioLocalDataSource {
@@ -69,18 +86,13 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   // are a single, predictable tap away instead of buried several folders
   // deep.
   final MediaStore _mediaStore = MediaStore();
-  static bool _appFolderConfigured = false;
 
   AudioLocalDataSourceImpl({AudioPlayer? player})
-      : _player = player ?? AudioPlayer() {
-    if (!_appFolderConfigured) {
-      MediaStore.appFolder = 'TafsirEditor';
-      _appFolderConfigured = true;
-    }
-  }
+      : _player = player ?? AudioPlayer();
 
   void _assertM4a(String filePath) {
-    if (p.extension(filePath).toLowerCase() != '.m4a') {
+    final ext = p.extension(filePath).toLowerCase();
+    if (ext != '.m4a' && ext != '.aac' && ext != '.mp4') {
       throw const UnsupportedFormatException();
     }
     if (!File(filePath).existsSync()) {
@@ -300,58 +312,66 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   Future<String> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    required Duration totalDuration,
     void Function(double progress)? onProgress,
   }) async {
-    _assertM4a(filePath);
+    if (!File(filePath).existsSync()) {
+      throw const FileAccessException('File does not exist on disk.');
+    }
     final stagingDir = await _stagingDir('Compressed');
     final baseName = p.basenameWithoutExtension(filePath);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final stagingPath = p.join(
         stagingDir.path, '${baseName}_${bitrateKbps}kbps_$timestamp.m4a');
 
-    // Many .m4a files carry embedded cover art as an attached-picture
-    // "video" stream. Without telling ffmpeg what to do with it, it tries
-    // to re-encode that stream through the default video codec, which is
-    // what makes compression appear to hang indefinitely with no error —
-    // the audio track finishes but the process never returns. "-vn"
-    // explicitly drops any video/image stream so only the audio is
-    // touched.
     final cmd = '-y -i "$filePath" -vn -c:a aac -b:a ${bitrateKbps}k '
         '-movflags +faststart "$stagingPath"';
 
+    final totalMs = totalDuration.inMilliseconds.toDouble();
+
     try {
-      // Belt-and-braces timeout: whatever the cause, the UI must never be
-      // left spinning forever. If ffmpeg doesn't finish in a reasonable
-      // window, cancel it and surface a real error instead.
-      final session = await FFmpegKit.execute(cmd).timeout(
-        const Duration(minutes: 5),
-        onTimeout: () async {
-          await FFmpegKit.cancel();
-          throw CompressionException(
-              'Compression timed out after 5 minutes.');
+      final completer = Completer<void>();
+
+      await FFmpegKit.executeAsync(
+        cmd,
+        (session) async {
+          final returnCode = await session.getReturnCode();
+          if (returnCode == null || returnCode.isValueSuccess() == false) {
+            if (!completer.isCompleted) {
+              final logs = await session.getAllLogsAsString();
+              completer.completeError(
+                  CompressionException('FFmpeg compression failed: $logs'));
+            }
+            return;
+          }
+          if (!completer.isCompleted) completer.complete();
+        },
+        null,
+        (statistics) {
+          if (totalMs > 0 && onProgress != null) {
+            final processed = statistics.getTime().toDouble();
+            final progress = (processed / totalMs).clamp(0.0, 1.0);
+            onProgress(progress);
+          }
         },
       );
 
-      final returnCode = await session.getReturnCode();
-      if (returnCode == null || returnCode.isValueSuccess() == false) {
-        final logs = await session.getAllLogsAsString();
-        throw CompressionException('FFmpeg compression failed: $logs');
-      }
+      await completer.future.timeout(
+        const Duration(minutes: 5),
+        onTimeout: () async {
+          await FFmpegKit.cancel();
+          throw CompressionException('Compression timed out after 5 minutes.');
+        },
+      );
 
       if (!(await File(stagingPath).exists())) {
         throw CompressionException('Compressed file was not created.');
       }
 
-      // Publish to Music/AudioEditor so it's visible directly in the file
-      // manager, then clean up the staging copy.
       return await _publishToMusic(stagingPath);
     } on CompressionException {
       rethrow;
     } catch (e) {
-      // Any other unexpected failure (I/O, plugin channel error, etc.)
-      // must still resolve to a CompressionException so it reaches the
-      // UI as a proper failure state rather than an unhandled exception
-      // that leaves the caller's Future — and the spinner — hanging.
       throw CompressionException('Failed to compress audio: $e');
     }
   }
@@ -413,16 +433,38 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
 
   @override
   Future<Duration> getDuration(String filePath) async {
-    _assertM4a(filePath);
+    if (!File(filePath).existsSync()) {
+      throw const FileAccessException('File does not exist on disk.');
+    }
     try {
-      // A short-lived, throwaway player instance so this doesn't disturb
-      // whatever is currently loaded in the main playback player.
       final probe = AudioPlayer();
       final duration = await probe.setFilePath(filePath) ?? Duration.zero;
       await probe.dispose();
       return duration;
-    } catch (e) {
-      throw FileAccessException('Failed to probe duration: $e');
+    } catch (_) {
+      // just_audio can't probe this container — fall back to FFmpeg
+      // which handles a much wider set of formats.
+      try {
+        final session = await FFmpegKit.execute(
+          '-i "$filePath" -f null -',
+        );
+        final logs = await session.getAllLogsAsString() ?? '';
+        final match = RegExp(r'Duration:\s*(\d{2}):(\d{2}):(\d{2})\.(\d{2})')
+            .firstMatch(logs);
+        if (match != null) {
+          final h = int.parse(match.group(1)!);
+          final m = int.parse(match.group(2)!);
+          final s = int.parse(match.group(3)!);
+          final cs = int.parse(match.group(4)!);
+          return Duration(
+            hours: h,
+            minutes: m,
+            seconds: s,
+            milliseconds: cs * 10,
+          );
+        }
+      } catch (_) {}
+      return Duration.zero;
     }
   }
 
@@ -440,6 +482,35 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
       return newPath;
     } catch (e) {
       throw FileAccessException('Failed to rename file: $e');
+    }
+  }
+
+  @override
+  Future<List<OutputFileInfo>> listOutputFiles(String folderName) async {
+    try {
+      final dir = Directory('/storage/emulated/0/Music/$folderName');
+      if (!await dir.exists()) return [];
+      final files = await dir
+          .list()
+          .where((e) => e is File && p.extension(e.path) == '.m4a')
+          .cast<File>()
+          .toList();
+      final result = <OutputFileInfo>[];
+      for (final file in files) {
+        try {
+          final stat = await file.stat();
+          result.add(OutputFileInfo(
+            name: p.basename(file.path),
+            path: file.path,
+            sizeBytes: stat.size,
+            modified: stat.modified,
+          ));
+        } catch (_) {}
+      }
+      result.sort((a, b) => b.modified.compareTo(a.modified));
+      return result;
+    } catch (e) {
+      return [];
     }
   }
 }
