@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
 import '../../../../core/utils/formatters.dart';
@@ -18,7 +18,7 @@ class SplitSection extends StatelessWidget {
 
   Future<void> _shareFile(String filePath) async {
     try {
-      print('Attempting to share file: $filePath');
+      print('Attempting to open file: $filePath');
       final file = File(filePath);
       if (!(await file.exists())) {
         print('File does not exist: $filePath');
@@ -26,12 +26,17 @@ class SplitSection extends StatelessWidget {
       }
       print('File exists, size: ${await file.length()} bytes');
 
-      // Try basic share with text only
-      await Share.share('Audio file: ${p.basename(filePath)}\nPath: $filePath');
-      print('Share completed successfully');
+      // Use url_launcher to open the file
+      final uri = Uri.file(filePath);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+        print('File opened successfully');
+      } else {
+        print('Could not launch file');
+      }
     } catch (e) {
-      print('Error sharing file: $e');
-      debugPrint('Error sharing file: $e');
+      print('Error opening file: $e');
+      debugPrint('Error opening file: $e');
     }
   }
 

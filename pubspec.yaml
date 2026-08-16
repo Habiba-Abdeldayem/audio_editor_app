@@ -32,7 +32,7 @@ dependencies:
   path_provider: ^2.1.4
   path: ^1.9.0
   permission_handler: ^11.3.1
-  share_plus: ^7.2.1
+  url_launcher: ^6.2.2
 
   # Metadata read/write (title, artist, artwork tags on m4a/mp4 container)
   # audiotags gives cross-platform tag read/write support
