@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/services.dart' show PlatformException;
+import 'package:share_plus/share_plus.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
 import '../../../../core/utils/formatters.dart';
@@ -16,27 +17,40 @@ class SplitSection extends StatelessWidget {
     this.resultPaths,
   });
 
-  Future<void> _shareFile(String filePath) async {
+  Future<void> _shareFile(BuildContext context, String filePath) async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
-      print('Attempting to open file: $filePath');
       final file = File(filePath);
       if (!(await file.exists())) {
-        print('File does not exist: $filePath');
+        messenger.showSnackBar(
+          const SnackBar(content: Text('File no longer exists.')),
+        );
         return;
       }
-      print('File exists, size: ${await file.length()} bytes');
 
-      // Use url_launcher to open the file
-      final uri = Uri.file(filePath);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-        print('File opened successfully');
-      } else {
-        print('Could not launch file');
-      }
+      // share_plus resolves this to a content:// URI via its own
+      // FileProvider under the hood, instead of a raw file:// Uri. Passing
+      // a bare file path/Uri.file() straight into a Share/VIEW Intent is
+      // exactly what triggers FileUriExposedException on API 24+ (apps may
+      // not expose file:// URIs to other apps) — routing through the
+      // provider is the supported fix, not a bigger try/catch around the
+      // same call.
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(filePath)],
+          subject: p.basename(filePath),
+        ),
+      );
+
+      if (result.status == ShareResultStatus.dismissed) return;
+    } on PlatformException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not share file: ${e.message ?? e}')),
+      );
     } catch (e) {
-      print('Error opening file: $e');
-      debugPrint('Error opening file: $e');
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not share file: $e')),
+      );
     }
   }
 
@@ -100,10 +114,7 @@ class SplitSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: () {
-                        print('Share button pressed for: $path');
-                        _shareFile(path);
-                      },
+                      onPressed: () => _shareFile(context, path),
                       icon: const Icon(Icons.share),
                       tooltip: 'Share',
                       iconSize: 20,

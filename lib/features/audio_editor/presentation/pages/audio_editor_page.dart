@@ -55,6 +55,10 @@ class _AudioEditorView extends StatelessWidget {
                   state.compressionStatus == CompressionStatus.loadingOptions,
               isCompressing:
                   state.compressionStatus == CompressionStatus.compressing,
+              isError: state.compressionStatus == CompressionStatus.error,
+              errorMessage: state.compressionStatus == CompressionStatus.error
+                  ? state.failure?.message
+                  : null,
               resultPath: state.compressionStatus == CompressionStatus.done
                   ? state.compressedFilePath
                   : null,

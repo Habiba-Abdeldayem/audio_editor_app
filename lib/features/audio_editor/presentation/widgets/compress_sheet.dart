@@ -7,6 +7,8 @@ class CompressSheet extends StatelessWidget {
   final List<CompressionOption> options;
   final bool isLoadingOptions;
   final bool isCompressing;
+  final bool isError;
+  final String? errorMessage;
   final String? resultPath;
   final ValueChanged<int> onOptionSelected;
 
@@ -17,6 +19,8 @@ class CompressSheet extends StatelessWidget {
     required this.isLoadingOptions,
     required this.isCompressing,
     required this.onOptionSelected,
+    this.isError = false,
+    this.errorMessage,
     this.resultPath,
   });
 
@@ -59,6 +63,27 @@ class CompressSheet extends StatelessWidget {
                 leading: const Icon(Icons.check_circle, color: Colors.green),
                 title: const Text('Compression complete'),
                 subtitle: Text(resultPath!.split('/').last),
+              )
+            else if (isError)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 32),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage ?? 'Compression failed.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Choose a size below to try again.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
               )
             else
               ...options.map((option) {

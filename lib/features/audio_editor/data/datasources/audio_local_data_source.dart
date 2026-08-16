@@ -4,6 +4,7 @@ import 'package:audio_waveforms/audio_waveforms.dart' as waveforms;
 import 'package:audiotags/audiotags.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -54,8 +55,22 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   final AudioPlayer _player;
   waveforms.PlayerController? _waveformExtractor;
 
+  // MediaStore is how output files end up somewhere the user can actually
+  // find: the public Music folder, visible directly in any file manager,
+  // rather than the app's private sandbox. "AudioEditor" is the one
+  // subfolder everything is grouped under — Music/AudioEditor — so results
+  // are a single, predictable tap away instead of buried several folders
+  // deep.
+  final MediaStore _mediaStore = MediaStore();
+  static bool _appFolderConfigured = false;
+
   AudioLocalDataSourceImpl({AudioPlayer? player})
-      : _player = player ?? AudioPlayer();
+      : _player = player ?? AudioPlayer() {
+    if (!_appFolderConfigured) {
+      MediaStore.appFolder = 'audios';
+      _appFolderConfigured = true;
+    }
+  }
 
   void _assertM4a(String filePath) {
     if (p.extension(filePath).toLowerCase() != '.m4a') {
@@ -144,43 +159,56 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     _waveformExtractor?.dispose();
   }
 
-  Future<Directory> _outputDir() async {
-    // On Android, use the root of external storage for maximum visibility
-    final externalDir = await getExternalStorageDirectory();
-    if (externalDir != null) {
-      // Navigate to the root of external storage
-      final storageRoot = externalDir.parent.parent
-          .parent; // Go up from /storage/emulated/0/Android/data/... to /storage/emulated/0
-      final audioEditorPath =
-          Directory(p.join(storageRoot.path, 'AudioEditor'));
+  /// ffmpeg needs a real, plain filesystem path to write to — it can't
+  /// target a MediaStore content:// URI directly. So it writes here first,
+  /// a private cache folder invisible to the user, and [_publishToMusic]
+  /// then hands the finished file over to MediaStore and deletes the
+  /// staging copy. The user never sees this folder; they only ever see
+  /// the published result in Music/AudioEditor.
+  Future<Directory> _stagingDir(String subfolder) async {
+    final cacheDir = await getTemporaryDirectory();
+    final dir = Directory(p.join(cacheDir.path, 'AudioEditorStaging', subfolder));
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
+    }
+    return dir;
+  }
 
-      if (!audioEditorPath.existsSync()) {
-        audioEditorPath.createSync(recursive: true);
+  /// Publishes a finished file from the staging folder into the public
+  /// Music/AudioEditor folder via MediaStore, then deletes the staging
+  /// copy. This is what makes the result show up directly in the file
+  /// manager / any music app on Android 10+ without ever requesting broad
+  /// storage access — MediaStore owns the write, not raw File I/O.
+  Future<String> _publishToMusic(String stagingPath) async {
+    final fileName = p.basename(stagingPath);
+    try {
+      final saveInfo = await _mediaStore.saveFile(
+        tempFilePath: stagingPath,
+        // fileName: fileName,
+        dirType: DirType.audio,
+        dirName: DirName.music,
+      );
+
+      if (saveInfo == null) {
+        throw FileAccessException(
+            'Could not save "$fileName" to the Music folder.');
       }
-      return audioEditorPath;
-    }
 
-    // Fallback to app documents
-    final appDir = await getApplicationDocumentsDirectory();
-    return Directory(p.join(appDir.path, 'audio_editor_output'));
-  }
-
-  Future<Directory> _splitOutputDir() async {
-    final baseDir = await _outputDir();
-    final splitDir = Directory(p.join(baseDir.path, 'Split'));
-    if (!splitDir.existsSync()) {
-      splitDir.createSync(recursive: true);
+      // Resolve the content:// URI MediaStore hands back into a normal
+      // path so the rest of the app (sharing, "file exists" checks, etc.)
+      // can keep working with a plain file path.
+      final resolvedPath =
+          await _mediaStore.getFilePathFromUri(uriString: saveInfo.uri.toString());
+      return resolvedPath ?? saveInfo.uri.toString();
+    } finally {
+      // saveFile() copies the bytes into MediaStore's storage, so the
+      // staging copy is redundant the moment it returns (success or not —
+      // don't leave partial files behind on failure either).
+      final stagingFile = File(stagingPath);
+      if (await stagingFile.exists()) {
+        await stagingFile.delete();
+      }
     }
-    return splitDir;
-  }
-
-  Future<Directory> _compressOutputDir() async {
-    final baseDir = await _outputDir();
-    final compressDir = Directory(p.join(baseDir.path, 'Compressed'));
-    if (!compressDir.existsSync()) {
-      compressDir.createSync(recursive: true);
-    }
-    return compressDir;
   }
 
   @override
@@ -189,58 +217,70 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     required Duration splitPoint,
   }) async {
     _assertM4a(filePath);
-    final outDir = await _splitOutputDir();
+    final stagingDir = await _stagingDir('Split');
     final baseName = p.basenameWithoutExtension(filePath);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
 
     // More user-friendly naming with timestamp
-    final partA = p.join(outDir.path, '${baseName}_part1_$timestamp.m4a');
-    final partB = p.join(outDir.path, '${baseName}_part2_$timestamp.m4a');
+    final stagingA =
+        p.join(stagingDir.path, '${baseName}_part1_$timestamp.m4a');
+    final stagingB =
+        p.join(stagingDir.path, '${baseName}_part2_$timestamp.m4a');
 
     final splitSeconds =
         splitPoint.inMilliseconds / 1000.0; // fractional seconds for ffmpeg
 
     // Stream-copy (-c copy): no re-encoding, so splitting is fast and
     // lossless — this only cuts the container, not the codec data.
-    final cmdA = '-y -i "$filePath" -ss 0 -to $splitSeconds -c copy "$partA"';
-    final cmdB = '-y -i "$filePath" -ss $splitSeconds -c copy "$partB"';
+    final cmdA =
+        '-y -i "$filePath" -ss 0 -to $splitSeconds -c copy "$stagingA"';
+    final cmdB = '-y -i "$filePath" -ss $splitSeconds -c copy "$stagingB"';
 
-    print('Splitting audio: $filePath');
-    print('Output directory: ${outDir.path}');
-    print('Part A: $partA');
-    print('Part B: $partB');
-    print('Split point: $splitSeconds seconds');
+    try {
+      final sessionA = await FFmpegKit.execute(cmdA).timeout(
+        const Duration(minutes: 5),
+        onTimeout: () async {
+          await FFmpegKit.cancel();
+          throw SplitException('Split timed out after 5 minutes.');
+        },
+      );
+      final returnCodeA = await sessionA.getReturnCode();
+      if (returnCodeA == null || returnCodeA.isValueSuccess() == false) {
+        final logs = await sessionA.getAllLogsAsString();
+        throw SplitException('FFmpeg failed on first half: $logs');
+      }
 
-    final sessionA = await FFmpegKit.execute(cmdA);
-    final returnCodeA = await sessionA.getReturnCode();
-    if (returnCodeA!.isValueSuccess() == false) {
-      final logs = await sessionA.getAllLogsAsString();
-      print('FFmpeg failed on first half: $logs');
-      throw SplitException('FFmpeg failed on first half: $logs');
+      final sessionB = await FFmpegKit.execute(cmdB).timeout(
+        const Duration(minutes: 5),
+        onTimeout: () async {
+          await FFmpegKit.cancel();
+          throw SplitException('Split timed out after 5 minutes.');
+        },
+      );
+      final returnCodeB = await sessionB.getReturnCode();
+      if (returnCodeB == null || returnCodeB.isValueSuccess() == false) {
+        final logs = await sessionB.getAllLogsAsString();
+        throw SplitException('FFmpeg failed on second half: $logs');
+      }
+
+      if (!(await File(stagingA).exists())) {
+        throw SplitException('Part A file was not created.');
+      }
+      if (!(await File(stagingB).exists())) {
+        throw SplitException('Part B file was not created.');
+      }
+
+      // Publish both parts to Music/AudioEditor so they're immediately
+      // visible in the file manager, then clean up the staging copies.
+      final publishedA = await _publishToMusic(stagingA);
+      final publishedB = await _publishToMusic(stagingB);
+
+      return [publishedA, publishedB];
+    } on SplitException {
+      rethrow;
+    } catch (e) {
+      throw SplitException('Failed to split audio: $e');
     }
-    print('Part A created successfully');
-
-    final sessionB = await FFmpegKit.execute(cmdB);
-    final returnCodeB = await sessionB.getReturnCode();
-    if (returnCodeB!.isValueSuccess() == false) {
-      final logs = await sessionB.getAllLogsAsString();
-      print('FFmpeg failed on second half: $logs');
-      throw SplitException('FFmpeg failed on second half: $logs');
-    }
-    print('Part B created successfully');
-
-    // Verify files exist
-    final fileA = File(partA);
-    final fileB = File(partB);
-    if (!(await fileA.exists())) {
-      throw SplitException('Part A file not created: $partA');
-    }
-    if (!(await fileB.exists())) {
-      throw SplitException('Part B file not created: $partB');
-    }
-
-    print('Split completed successfully');
-    return [partA, partB];
   }
 
   @override
@@ -249,30 +289,57 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
     required int bitrateKbps,
   }) async {
     _assertM4a(filePath);
-    final outDir = await _compressOutputDir();
+    final stagingDir = await _stagingDir('Compressed');
     final baseName = p.basenameWithoutExtension(filePath);
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final outputPath =
-        p.join(outDir.path, '${baseName}_${bitrateKbps}kbps_$timestamp.m4a');
+    final stagingPath = p.join(
+        stagingDir.path, '${baseName}_${bitrateKbps}kbps_$timestamp.m4a');
 
-    final cmd =
-        '-y -i "$filePath" -c:a aac -b:a ${bitrateKbps}k -movflags +faststart "$outputPath"';
+    // Many .m4a files carry embedded cover art as an attached-picture
+    // "video" stream. Without telling ffmpeg what to do with it, it tries
+    // to re-encode that stream through the default video codec, which is
+    // what makes compression appear to hang indefinitely with no error —
+    // the audio track finishes but the process never returns. "-vn"
+    // explicitly drops any video/image stream so only the audio is
+    // touched.
+    final cmd = '-y -i "$filePath" -vn -c:a aac -b:a ${bitrateKbps}k '
+        '-movflags +faststart "$stagingPath"';
 
-    print('Compressing audio: $filePath');
-    print('Output directory: ${outDir.path}');
-    print('Output path: $outputPath');
-    print('Bitrate: ${bitrateKbps}kbps');
+    try {
+      // Belt-and-braces timeout: whatever the cause, the UI must never be
+      // left spinning forever. If ffmpeg doesn't finish in a reasonable
+      // window, cancel it and surface a real error instead.
+      final session = await FFmpegKit.execute(cmd).timeout(
+        const Duration(minutes: 5),
+        onTimeout: () async {
+          await FFmpegKit.cancel();
+          throw CompressionException(
+              'Compression timed out after 5 minutes.');
+        },
+      );
 
-    final session = await FFmpegKit.execute(cmd);
-    final returnCode = await session.getReturnCode();
-    if (returnCode!.isValueSuccess() == false) {
-      final logs = await session.getAllLogsAsString();
-      print('FFmpeg compression failed: $logs');
-      throw CompressionException('FFmpeg compression failed: $logs');
+      final returnCode = await session.getReturnCode();
+      if (returnCode == null || returnCode.isValueSuccess() == false) {
+        final logs = await session.getAllLogsAsString();
+        throw CompressionException('FFmpeg compression failed: $logs');
+      }
+
+      if (!(await File(stagingPath).exists())) {
+        throw CompressionException('Compressed file was not created.');
+      }
+
+      // Publish to Music/AudioEditor so it's visible directly in the file
+      // manager, then clean up the staging copy.
+      return await _publishToMusic(stagingPath);
+    } on CompressionException {
+      rethrow;
+    } catch (e) {
+      // Any other unexpected failure (I/O, plugin channel error, etc.)
+      // must still resolve to a CompressionException so it reaches the
+      // UI as a proper failure state rather than an unhandled exception
+      // that leaves the caller's Future — and the spinner — hanging.
+      throw CompressionException('Failed to compress audio: $e');
     }
-
-    print('Compression completed successfully');
-    return outputPath;
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 
 import '../../features/audio_editor/data/datasources/audio_local_data_source.dart';
 import '../../features/audio_editor/data/repositories/audio_repository_impl.dart';
@@ -20,6 +21,7 @@ final sl = GetIt.instance;
 /// Each layer only ever depends on the abstraction of the layer below it.
 Future<void> initDependencies() async {
   // External / platform
+  await MediaStore.ensureInitialized();
   sl.registerLazySingleton<AudioPlayer>(() => AudioPlayer());
 
   // Data
