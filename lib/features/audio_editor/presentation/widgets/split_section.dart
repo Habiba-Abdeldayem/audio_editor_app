@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path/path.dart' as p;
 import '../../../../core/utils/formatters.dart';
 
 class SplitSection extends StatelessWidget {
@@ -12,6 +14,15 @@ class SplitSection extends StatelessWidget {
     required this.onSplit,
     this.resultPaths,
   });
+
+  Future<void> _openFolder() async {
+    if (resultPaths != null && resultPaths!.isNotEmpty) {
+      // Open the directory containing the first split file
+      final firstFile = resultPaths!.first;
+      final directory = p.dirname(firstFile);
+      await OpenFilex.open(directory);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +76,12 @@ class SplitSection extends StatelessWidget {
                     const SizedBox(height: 4),
                   ],
                 ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: _openFolder,
+                icon: const Icon(Icons.folder_open),
+                label: const Text('Open folder'),
+              ),
             ],
           ],
         ),
