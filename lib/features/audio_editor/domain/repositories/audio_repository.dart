@@ -57,4 +57,9 @@ abstract class AudioRepository {
   });
 
   Future<Either<Failure, int>> getFileSizeBytes(String filePath);
+
+  Future<Either<Failure, String>> renameFile({
+    required String filePath,
+    required String newName,
+  });
 }

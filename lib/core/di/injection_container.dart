@@ -10,6 +10,7 @@ import '../../features/audio_editor/domain/usecases/get_audio_metadata.dart';
 import '../../features/audio_editor/domain/usecases/get_compression_options.dart';
 import '../../features/audio_editor/domain/usecases/load_audio_file.dart';
 import '../../features/audio_editor/domain/usecases/playback_usecases.dart';
+import '../../features/audio_editor/domain/usecases/rename_audio_file.dart';
 import '../../features/audio_editor/domain/usecases/split_audio_file.dart';
 import '../../features/audio_editor/domain/usecases/update_audio_metadata.dart';
 import '../../features/audio_editor/presentation/bloc/audio_editor_cubit.dart';
@@ -35,6 +36,7 @@ Future<void> initDependencies() async {
   // Domain use cases
   sl.registerFactory(() => LoadAudioFile(sl()));
   sl.registerFactory(() => SplitAudioFile(sl()));
+  sl.registerFactory(() => RenameAudioFile(sl()));
   sl.registerFactory(() => GetCompressionOptions(sl()));
   sl.registerFactory(() => CompressAudioFile(sl()));
   sl.registerFactory(() => GetAudioMetadata(sl()));
@@ -51,6 +53,7 @@ Future<void> initDependencies() async {
     () => AudioEditorCubit(
       loadAudioFile: sl(),
       splitAudioFile: sl(),
+      renameAudioFile: sl(),
       getCompressionOptions: sl(),
       compressAudioFile: sl(),
       getAudioMetadata: sl(),

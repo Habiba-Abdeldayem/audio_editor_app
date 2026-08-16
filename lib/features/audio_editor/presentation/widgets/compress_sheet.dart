@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../domain/entities/compression_option.dart';
 
 class CompressSheet extends StatelessWidget {
@@ -26,6 +27,7 @@ class CompressSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -33,11 +35,11 @@ class CompressSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Compress audio',
+            Text(l10n.compressAudio,
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
-              'Current size: ${Formatters.fileSize(originalSizeBytes)}',
+              l10n.currentSize(Formatters.fileSize(originalSizeBytes)),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -48,20 +50,20 @@ class CompressSheet extends StatelessWidget {
                 child: CircularProgressIndicator(),
               ))
             else if (isCompressing)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+               Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Column(
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 12),
-                    Text('Compressing…'),
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 12),
+                    Text(l10n.compressing),
                   ],
                 ),
               )
             else if (resultPath != null)
               ListTile(
                 leading: const Icon(Icons.check_circle, color: Colors.green),
-                title: const Text('Compression complete'),
+                title: Text(l10n.compressionComplete),
                 subtitle: Text(resultPath!.split('/').last),
               )
             else if (isError)
@@ -73,13 +75,13 @@ class CompressSheet extends StatelessWidget {
                         color: Colors.red, size: 32),
                     const SizedBox(height: 8),
                     Text(
-                      errorMessage ?? 'Compression failed.',
+                      errorMessage ?? l10n.compressionFailed,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Choose a size below to try again.',
+                      l10n.chooseSizeToRetry,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],

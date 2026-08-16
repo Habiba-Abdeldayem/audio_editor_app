@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../l10n/app_localizations.dart';
 import '../../data/models/audio_metadata_model.dart';
 
 class MetadataEditorSheet extends StatefulWidget {
@@ -71,6 +72,7 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -83,7 +85,7 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Edit metadata',
+              Text(l10n.editMetadata,
                   style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16),
               Center(
@@ -123,25 +125,25 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
               const SizedBox(height: 20),
               TextField(
                 controller: _titleCtrl,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: l10n.fieldTitle),
                 onChanged: (_) => _emitChange(),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _artistCtrl,
-                decoration: const InputDecoration(labelText: 'Artist'),
+                decoration: InputDecoration(labelText: l10n.fieldArtist),
                 onChanged: (_) => _emitChange(),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _albumCtrl,
-                decoration: const InputDecoration(labelText: 'Album'),
+                decoration: InputDecoration(labelText: l10n.fieldAlbum),
                 onChanged: (_) => _emitChange(),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _genreCtrl,
-                decoration: const InputDecoration(labelText: 'Genre'),
+                decoration: InputDecoration(labelText: l10n.fieldGenre),
                 onChanged: (_) => _emitChange(),
               ),
               const SizedBox(height: 20),
@@ -153,7 +155,7 @@ class _MetadataEditorSheetState extends State<MetadataEditorSheet> {
                         width: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save metadata'),
+                    : Text(l10n.saveMetadata),
               ),
             ],
           ),

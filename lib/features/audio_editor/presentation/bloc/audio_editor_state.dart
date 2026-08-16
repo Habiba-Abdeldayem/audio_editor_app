@@ -29,6 +29,11 @@ class AudioEditorState extends Equatable {
   final List<CompressionOption> compressionOptions;
   final String? compressedFilePath;
 
+  // File compression (for split results etc.)
+  final CompressionStatus fileCompressionStatus;
+  final String? fileCompressedPath;
+  final String? fileCompressingPath;
+
   // Metadata
   final MetadataStatus metadataStatus;
   final AudioMetadata? metadata;
@@ -45,6 +50,9 @@ class AudioEditorState extends Equatable {
     this.compressionStatus = CompressionStatus.idle,
     this.compressionOptions = const [],
     this.compressedFilePath,
+    this.fileCompressionStatus = CompressionStatus.idle,
+    this.fileCompressedPath,
+    this.fileCompressingPath,
     this.metadataStatus = MetadataStatus.idle,
     this.metadata,
     this.metadataDraft,
@@ -70,6 +78,9 @@ class AudioEditorState extends Equatable {
     CompressionStatus? compressionStatus,
     List<CompressionOption>? compressionOptions,
     String? compressedFilePath,
+    CompressionStatus? fileCompressionStatus,
+    String? fileCompressedPath,
+    String? fileCompressingPath,
     MetadataStatus? metadataStatus,
     AudioMetadata? metadata,
     AudioMetadataModel? metadataDraft,
@@ -85,6 +96,10 @@ class AudioEditorState extends Equatable {
       compressionStatus: compressionStatus ?? this.compressionStatus,
       compressionOptions: compressionOptions ?? this.compressionOptions,
       compressedFilePath: compressedFilePath ?? this.compressedFilePath,
+      fileCompressionStatus:
+          fileCompressionStatus ?? this.fileCompressionStatus,
+      fileCompressedPath: fileCompressedPath ?? this.fileCompressedPath,
+      fileCompressingPath: fileCompressingPath ?? this.fileCompressingPath,
       metadataStatus: metadataStatus ?? this.metadataStatus,
       metadata: metadata ?? this.metadata,
       metadataDraft: metadataDraft ?? this.metadataDraft,
@@ -103,6 +118,9 @@ class AudioEditorState extends Equatable {
         compressionStatus,
         compressionOptions,
         compressedFilePath,
+        fileCompressionStatus,
+        fileCompressedPath,
+        fileCompressingPath,
         metadataStatus,
         metadata,
         metadataDraft,

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../bloc/audio_editor_cubit.dart';
 import '../bloc/audio_editor_state.dart';
 import '../widgets/compress_sheet.dart';
@@ -70,6 +71,42 @@ class _AudioEditorView extends StatelessWidget {
     );
   }
 
+  void _openFileCompressSheet(BuildContext context, String filePath) {
+    final cubit = context.read<AudioEditorCubit>();
+    cubit.loadCompressionOptions();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => BlocProvider.value(
+        value: cubit,
+        child: BlocBuilder<AudioEditorCubit, AudioEditorState>(
+          builder: (context, state) {
+            return CompressSheet(
+              originalSizeBytes: 0,
+              options: state.compressionOptions,
+              isLoadingOptions:
+                  state.compressionStatus == CompressionStatus.loadingOptions,
+              isCompressing:
+                  state.fileCompressionStatus == CompressionStatus.compressing,
+              isError:
+                  state.fileCompressionStatus == CompressionStatus.error,
+              errorMessage:
+                  state.fileCompressionStatus == CompressionStatus.error
+                      ? state.failure?.message
+                      : null,
+              resultPath:
+                  state.fileCompressionStatus == CompressionStatus.done
+                      ? state.fileCompressedPath
+                      : null,
+              onOptionSelected: (bitrate) =>
+                  cubit.compressFile(filePath: filePath, bitrateKbps: bitrate),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   void _openMetadataSheet(BuildContext context) {
     final cubit = context.read<AudioEditorCubit>();
     cubit.openMetadataEditor();
@@ -102,7 +139,7 @@ class _AudioEditorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Audio Editor')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).audioEditorAppBarTitle)),
       body: BlocConsumer<AudioEditorCubit, AudioEditorState>(
         listenWhen: (previous, current) => current.failure != null,
         listener: (context, state) {
@@ -118,20 +155,21 @@ class _AudioEditorView extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: () => _pickFile(context),
                 icon: const Icon(Icons.audio_file),
-                label: const Text('Choose an .m4a file'),
+                label: Text(AppLocalizations.of(context).chooseM4aFile),
               ),
             );
           }
 
           if (state.status == EditorStatus.loading) {
             final step = state.loadingStep;
-            String message = 'Loading audio...';
+            final l10n = AppLocalizations.of(context);
+            String message = l10n.loadingAudio;
             if (step == LoadingStep.fileMetadata) {
-              message = 'Reading file info...';
+              message = l10n.readingFileInfo;
             } else if (step == LoadingStep.waveform) {
-              message = 'Generating waveform...';
+              message = l10n.generatingWaveform;
             } else if (step == LoadingStep.playbackPrep) {
-              message = 'Preparing playback...';
+              message = l10n.preparingPlayback;
             }
             return Center(
               child: Column(
@@ -154,7 +192,7 @@ class _AudioEditorView extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: () => _pickFile(context),
                 icon: const Icon(Icons.audio_file),
-                label: const Text('Choose an .m4a file'),
+                label: Text(AppLocalizations.of(context).chooseM4aFile),
               ),
             );
           }
@@ -194,6 +232,10 @@ class _AudioEditorView extends StatelessWidget {
                   currentPosition: state.position,
                   onSplit: () => context.read<AudioEditorCubit>().splitAudio(),
                   resultPaths: state.splitResultPaths,
+                  onRename: (filePath, newName) =>
+                      context.read<AudioEditorCubit>().renameSplitFile(filePath, newName),
+                  onCompress: (filePath) =>
+                      _openFileCompressSheet(context, filePath),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -202,7 +244,7 @@ class _AudioEditorView extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: () => _openCompressSheet(context),
                         icon: const Icon(Icons.compress),
-                        label: const Text('Compress'),
+                        label: Text(AppLocalizations.of(context).compress),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -210,7 +252,7 @@ class _AudioEditorView extends StatelessWidget {
                       child: OutlinedButton.icon(
                         onPressed: () => _openMetadataSheet(context),
                         icon: const Icon(Icons.edit_note),
-                        label: const Text('Metadata'),
+                        label: Text(AppLocalizations.of(context).metadata),
                       ),
                     ),
                   ],
@@ -219,7 +261,7 @@ class _AudioEditorView extends StatelessWidget {
                 TextButton.icon(
                   onPressed: () => _pickFile(context),
                   icon: const Icon(Icons.swap_horiz),
-                  label: const Text('Choose a different file'),
+                  label: Text(AppLocalizations.of(context).chooseDifferentFile),
                 ),
               ],
             ),

@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'core/di/injection_container.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'features/audio_editor/presentation/pages/audio_editor_page.dart';
+import 'l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,9 @@ class AudioEditorApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
+      locale: const Locale('ar'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const AudioEditorPage(),
     );
   }

@@ -49,6 +49,10 @@ abstract class AudioLocalDataSource {
   /// compression-estimate flows that only need duration, not the full
   /// waveform re-decode that [loadAudioFile] performs.
   Future<Duration> getDuration(String filePath);
+
+  /// Renames the file at [filePath] to [newName] (must include extension).
+  /// Returns the new full path on success.
+  Future<String> renameFile({required String filePath, required String newName});
 }
 
 class AudioLocalDataSourceImpl implements AudioLocalDataSource {
@@ -409,6 +413,23 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
       return duration;
     } catch (e) {
       throw FileAccessException('Failed to probe duration: $e');
+    }
+  }
+
+  @override
+  Future<String> renameFile(
+      {required String filePath, required String newName}) async {
+    try {
+      final file = File(filePath);
+      if (!file.existsSync()) {
+        throw FileAccessException('File does not exist.');
+      }
+      final dir = file.parent.path;
+      final newPath = p.join(dir, newName);
+      await file.rename(newPath);
+      return newPath;
+    } catch (e) {
+      throw FileAccessException('Failed to rename file: $e');
     }
   }
 }

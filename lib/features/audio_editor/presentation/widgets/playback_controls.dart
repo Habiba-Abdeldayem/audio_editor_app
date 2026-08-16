@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class PlaybackControls extends StatelessWidget {
   final bool isPlaying;
@@ -19,6 +20,7 @@ class PlaybackControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         Row(
@@ -37,7 +39,7 @@ class PlaybackControls extends StatelessWidget {
             IconButton(
               iconSize: 32,
               icon: const Icon(Icons.replay_10),
-              tooltip: 'Back 10s',
+              tooltip: l10n.back10s,
               onPressed: () {
                 final target = position - const Duration(seconds: 10);
                 onSkip(target < Duration.zero ? Duration.zero : target);
@@ -53,7 +55,7 @@ class PlaybackControls extends StatelessWidget {
             IconButton(
               iconSize: 32,
               icon: const Icon(Icons.forward_10),
-              tooltip: 'Forward 10s',
+              tooltip: l10n.forward10s,
               onPressed: () {
                 final target = position + const Duration(seconds: 10);
                 onSkip(target > duration ? duration : target);

@@ -11,12 +11,14 @@ import '../../domain/usecases/load_audio_file.dart';
 import '../../domain/usecases/playback_usecases.dart';
 import '../../domain/usecases/split_audio_file.dart';
 import '../../domain/usecases/update_audio_metadata.dart';
+import '../../domain/usecases/rename_audio_file.dart';
 import '../../data/models/audio_metadata_model.dart';
 import 'audio_editor_state.dart';
 
 class AudioEditorCubit extends Cubit<AudioEditorState> {
   final LoadAudioFile loadAudioFile;
   final SplitAudioFile splitAudioFile;
+  final RenameAudioFile renameAudioFile;
   final GetCompressionOptions getCompressionOptions;
   final CompressAudioFile compressAudioFile;
   final GetAudioMetadata getAudioMetadata;
@@ -40,6 +42,7 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
   AudioEditorCubit({
     required this.loadAudioFile,
     required this.splitAudioFile,
+    required this.renameAudioFile,
     required this.getCompressionOptions,
     required this.compressAudioFile,
     required this.getAudioMetadata,
@@ -166,6 +169,23 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
     );
   }
 
+  Future<void> renameSplitFile(String oldPath, String newName) async {
+    final result = await renameAudioFile(
+      RenameAudioFileParams(filePath: oldPath, newName: newName),
+    );
+
+    result.fold(
+      (failure) =>
+          emit(state.copyWith(status: EditorStatus.error, failure: failure)),
+      (newPath) {
+        final paths = List<String>.from(state.splitResultPaths ?? []);
+        final idx = paths.indexOf(oldPath);
+        if (idx != -1) paths[idx] = newPath;
+        emit(state.copyWith(splitResultPaths: paths, clearFailure: true));
+      },
+    );
+  }
+
   Future<void> loadCompressionOptions() async {
     final track = state.track;
     if (track == null) return;
@@ -206,6 +226,34 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
       (outputPath) => emit(state.copyWith(
         compressionStatus: CompressionStatus.done,
         compressedFilePath: outputPath,
+      )),
+    );
+  }
+
+  Future<void> compressFile({
+    required String filePath,
+    required int bitrateKbps,
+  }) async {
+    emit(state.copyWith(
+      fileCompressionStatus: CompressionStatus.compressing,
+      fileCompressingPath: filePath,
+      clearFailure: true,
+    ));
+
+    final result = await compressAudioFile(
+      CompressAudioFileParams(filePath: filePath, bitrateKbps: bitrateKbps),
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(
+        fileCompressionStatus: CompressionStatus.error,
+        fileCompressingPath: null,
+        failure: failure,
+      )),
+      (outputPath) => emit(state.copyWith(
+        fileCompressionStatus: CompressionStatus.done,
+        fileCompressedPath: outputPath,
+        fileCompressingPath: null,
       )),
     );
   }

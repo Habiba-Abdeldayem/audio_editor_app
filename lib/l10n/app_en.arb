@@ -1,0 +1,266 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "TafsirEditor",
+  "@appTitle": {
+    "description": "The application title shown in the OS task switcher."
+  },
+
+  "audioEditorAppBarTitle": "Audio Editor",
+  "@audioEditorAppBarTitle": {
+    "description": "Title shown in the AppBar."
+  },
+
+  "chooseM4aFile": "Choose an .m4a file",
+  "@chooseM4aFile": {
+    "description": "Button label to pick an audio file."
+  },
+
+  "loadingAudio": "Loading audio...",
+  "@loadingAudio": {
+    "description": "Generic loading message while audio is being prepared."
+  },
+
+  "readingFileInfo": "Reading file info...",
+  "@readingFileInfo": {
+    "description": "Loading step: reading file metadata."
+  },
+
+  "generatingWaveform": "Generating waveform...",
+  "@generatingWaveform": {
+    "description": "Loading step: generating the waveform visualization."
+  },
+
+  "preparingPlayback": "Preparing playback...",
+  "@preparingPlayback": {
+    "description": "Loading step: preparing the audio player."
+  },
+
+  "compress": "Compress",
+  "@compress": {
+    "description": "Button label to open the compression sheet."
+  },
+
+  "metadata": "Metadata",
+  "@metadata": {
+    "description": "Button label to open the metadata editor."
+  },
+
+  "chooseDifferentFile": "Choose a different file",
+  "@chooseDifferentFile": {
+    "description": "Button label to pick a different audio file."
+  },
+
+  "compressAudio": "Compress audio",
+  "@compressAudio": {
+    "description": "Title of the compression bottom sheet."
+  },
+
+  "currentSize": "Current size: {size}",
+  "@currentSize": {
+    "description": "Displays the current file size in the compression sheet.",
+    "placeholders": {
+      "size": {
+        "type": "String",
+        "example": "4.2 MB"
+      }
+    }
+  },
+
+  "compressing": "Compressing…",
+  "@compressing": {
+    "description": "Shown while compression is in progress."
+  },
+
+  "compressionComplete": "Compression complete",
+  "@compressionComplete": {
+    "description": "Shown when compression finishes successfully."
+  },
+
+  "compressionFailed": "Compression failed.",
+  "@compressionFailed": {
+    "description": "Fallback error message when compression fails."
+  },
+
+  "chooseSizeToRetry": "Choose a size below to try again.",
+  "@chooseSizeToRetry": {
+    "description": "Hint shown after a compression failure."
+  },
+
+  "editMetadata": "Edit metadata",
+  "@editMetadata": {
+    "description": "Title of the metadata editor bottom sheet."
+  },
+
+  "fieldTitle": "Title",
+  "@fieldTitle": {
+    "description": "Label for the Title text field in the metadata editor."
+  },
+
+  "fieldArtist": "Artist",
+  "@fieldArtist": {
+    "description": "Label for the Artist text field in the metadata editor."
+  },
+
+  "fieldAlbum": "Album",
+  "@fieldAlbum": {
+    "description": "Label for the Album text field in the metadata editor."
+  },
+
+  "fieldGenre": "Genre",
+  "@fieldGenre": {
+    "description": "Label for the Genre text field in the metadata editor."
+  },
+
+  "saveMetadata": "Save metadata",
+  "@saveMetadata": {
+    "description": "Button label to save metadata changes."
+  },
+
+  "split": "Split",
+  "@split": {
+    "description": "Section title for the split feature."
+  },
+
+  "splitDescription": "Splits into two files at the current playhead — minute {minute}, {seconds}s ({duration}).",
+  "@splitDescription": {
+    "description": "Explains where the split will occur.",
+    "placeholders": {
+      "minute": {
+        "type": "int",
+        "example": "2"
+      },
+      "seconds": {
+        "type": "int",
+        "example": "30"
+      },
+      "duration": {
+        "type": "String",
+        "example": "02:30"
+      }
+    }
+  },
+
+  "splitAtCurrentPosition": "Split at current position",
+  "@splitAtCurrentPosition": {
+    "description": "Button label to split the audio at the current playhead."
+  },
+
+  "createdFiles": "Created files",
+  "@createdFiles": {
+    "description": "Label above the list of files created by a split."
+  },
+
+  "fileNoLongerExists": "File no longer exists.",
+  "@fileNoLongerExists": {
+    "description": "Snackbar message when a file has been deleted."
+  },
+
+  "couldNotShareFile": "Could not share file: {error}",
+  "@couldNotShareFile": {
+    "description": "Error snackbar when sharing fails.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Permission denied"
+      }
+    }
+  },
+
+  "rename": "Rename",
+  "@rename": {
+    "description": "Dialog title and tooltip for renaming a file."
+  },
+
+  "fileName": "File name",
+  "@fileName": {
+    "description": "Label for the file name text field in the rename dialog."
+  },
+
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button label."
+  },
+
+  "renamedTo": "Renamed to \"{name}\"",
+  "@renamedTo": {
+    "description": "Snackbar confirming a successful rename.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "my_audio"
+      }
+    }
+  },
+
+  "couldNotOpenFolder": "Could not open folder: {error}",
+  "@couldNotOpenFolder": {
+    "description": "Error snackbar when opening folder fails.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "No activity found"
+      }
+    }
+  },
+
+  "showInFolder": "Show in folder",
+  "@showInFolder": {
+    "description": "Tooltip for the show-in-folder action icon."
+  },
+
+  "share": "Share",
+  "@share": {
+    "description": "Tooltip for the share action icon."
+  },
+
+  "back10s": "Back 10s",
+  "@back10s": {
+    "description": "Tooltip for the rewind 10 seconds button."
+  },
+
+  "forward10s": "Forward 10s",
+  "@forward10s": {
+    "description": "Tooltip for the forward 10 seconds button."
+  },
+
+  "fileAccessError": "Could not access the audio file.",
+  "@fileAccessError": {
+    "description": "Error when the audio file cannot be accessed."
+  },
+
+  "unsupportedFormatError": "Only .m4a files are supported.",
+  "@unsupportedFormatError": {
+    "description": "Error when an unsupported file format is selected."
+  },
+
+  "playbackError": "Playback failed.",
+  "@playbackError": {
+    "description": "Error when audio playback fails."
+  },
+
+  "splitError": "Could not split the audio file.",
+  "@splitError": {
+    "description": "Error when splitting the audio file fails."
+  },
+
+  "compressionError": "Could not compress the audio file.",
+  "@compressionError": {
+    "description": "Error when compressing the audio file fails."
+  },
+
+  "metadataError": "Could not read or write metadata.",
+  "@metadataError": {
+    "description": "Error when reading or writing metadata fails."
+  },
+
+  "validationError": "Validation failed.",
+  "@validationError": {
+    "description": "Generic validation error."
+  },
+
+  "unknownError": "Something went wrong.",
+  "@unknownError": {
+    "description": "Fallback error message for unexpected failures."
+  }
+}

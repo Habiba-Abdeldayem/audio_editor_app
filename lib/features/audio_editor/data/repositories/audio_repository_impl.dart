@@ -276,6 +276,20 @@ class AudioRepositoryImpl implements AudioRepository {
       return Right(size);
     } on FileAccessException catch (e) {
       return Left(FileAccessFailure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> renameFile({
+    required String filePath,
+    required String newName,
+  }) async {
+    try {
+      final newPath =
+          await localDataSource.renameFile(filePath: filePath, newName: newName);
+      return Right(newPath);
+    } on FileAccessException catch (e) {
+      return Left(FileAccessFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure(e.toString()));
     }
