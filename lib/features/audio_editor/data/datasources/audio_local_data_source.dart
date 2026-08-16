@@ -226,6 +226,7 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   Future<List<String>> splitAudio({
     required String filePath,
     required Duration splitPoint,
+    void Function(double progress)? onProgress,
   }) async {
     _assertM4a(filePath);
     final stagingDir = await _stagingDir('Split');
@@ -299,6 +300,7 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   Future<String> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    void Function(double progress)? onProgress,
   }) async {
     _assertM4a(filePath);
     final stagingDir = await _stagingDir('Compressed');
