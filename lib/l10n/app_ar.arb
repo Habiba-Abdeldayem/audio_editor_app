@@ -17,6 +17,9 @@
   "compressionComplete": "اكتمل الضغط",
   "compressionFailed": "فشل الضغط.",
   "chooseSizeToRetry": "اختر حجمًا أدناه للمحاولة مرة أخرى.",
+  "smaller": "أصغر",
+  "compressed": "مضغوط",
+  "fileAlreadySmall": "الملف صغير بالفعل — لا تتوفر خيارات ضغط.",
   "editMetadata": "تعديل البيانات الوصفية",
   "fieldTitle": "العنوان",
   "fieldArtist": "الفنان",
@@ -52,5 +55,10 @@
   "systemDefault": "الافتراضي للنظام",
   "light": "فاتح",
   "dark": "داكن",
-  "language": "اللغة"
+  "language": "اللغة",
+  "outputFolder": "مجلد الحفظ",
+  "outputFolderPath": "يُحفظ في Music/{folder}",
+  "renameFolder": "إعادة تسمية المجلد",
+  "openOutputFolder": "فتح في الملف",
+  "folderName": "اسم المجلد"
 }

@@ -88,6 +88,8 @@
   },
 
   "smaller": "smaller",
+  "compressed": "Compressed",
+  "fileAlreadySmall": "File is already small — no compression options available.",
 
   "editMetadata": "Edit metadata",
   "@editMetadata": {
@@ -299,5 +301,36 @@
   "language": "Language",
   "@language": {
     "description": "Section header for language selection."
+  },
+
+  "outputFolder": "Output Folder",
+  "@outputFolder": {
+    "description": "Section header for output folder settings."
+  },
+
+  "outputFolderPath": "Files are saved to Music/{folder}",
+  "@outputFolderPath": {
+    "description": "Shows the current output folder path.",
+    "placeholders": {
+      "folder": {
+        "type": "String",
+        "example": "TafsirEditor"
+      }
+    }
+  },
+
+  "renameFolder": "Rename folder",
+  "@renameFolder": {
+    "description": "Tooltip for the rename folder action."
+  },
+
+  "openOutputFolder": "Open in file manager",
+  "@openOutputFolder": {
+    "description": "Button to open the output folder."
+  },
+
+  "folderName": "Folder name",
+  "@folderName": {
+    "description": "Label for the folder name text field."
   }
 }

@@ -59,7 +59,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chooseSizeToRetry => 'اختر حجمًا أدناه للمحاولة مرة أخرى.';
 
   @override
-  String get smaller => 'smaller';
+  String get smaller => 'أصغر';
+
+  @override
+  String get compressed => 'مضغوط';
+
+  @override
+  String get fileAlreadySmall => 'الملف صغير بالفعل — لا تتوفر خيارات ضغط.';
 
   @override
   String get editMetadata => 'تعديل البيانات الوصفية';
@@ -176,4 +182,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get language => 'اللغة';
+
+  @override
+  String get outputFolder => 'مجلد الحفظ';
+
+  @override
+  String outputFolderPath(String folder) {
+    return 'يُحفظ في Music/$folder';
+  }
+
+  @override
+  String get renameFolder => 'إعادة تسمية المجلد';
+
+  @override
+  String get openOutputFolder => 'فتح في الملف';
+
+  @override
+  String get folderName => 'اسم المجلد';
 }

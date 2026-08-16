@@ -62,6 +62,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smaller => 'smaller';
 
   @override
+  String get compressed => 'Compressed';
+
+  @override
+  String get fileAlreadySmall =>
+      'File is already small — no compression options available.';
+
+  @override
   String get editMetadata => 'Edit metadata';
 
   @override
@@ -176,4 +183,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get language => 'Language';
+
+  @override
+  String get outputFolder => 'Output Folder';
+
+  @override
+  String outputFolderPath(String folder) {
+    return 'Files are saved to Music/$folder';
+  }
+
+  @override
+  String get renameFolder => 'Rename folder';
+
+  @override
+  String get openOutputFolder => 'Open in file manager';
+
+  @override
+  String get folderName => 'Folder name';
 }

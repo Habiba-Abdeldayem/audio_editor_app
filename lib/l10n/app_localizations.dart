@@ -200,6 +200,18 @@ abstract class AppLocalizations {
   /// **'smaller'**
   String get smaller;
 
+  /// No description provided for @compressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressed'**
+  String get compressed;
+
+  /// No description provided for @fileAlreadySmall.
+  ///
+  /// In en, this message translates to:
+  /// **'File is already small — no compression options available.'**
+  String get fileAlreadySmall;
+
   /// Title of the metadata editor bottom sheet.
   ///
   /// In en, this message translates to:
@@ -415,6 +427,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get language;
+
+  /// Section header for output folder settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Output Folder'**
+  String get outputFolder;
+
+  /// Shows the current output folder path.
+  ///
+  /// In en, this message translates to:
+  /// **'Files are saved to Music/{folder}'**
+  String outputFolderPath(String folder);
+
+  /// Tooltip for the rename folder action.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename folder'**
+  String get renameFolder;
+
+  /// Button to open the output folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in file manager'**
+  String get openOutputFolder;
+
+  /// Label for the folder name text field.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder name'**
+  String get folderName;
 }
 
 class _AppLocalizationsDelegate
