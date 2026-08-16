@@ -11,6 +11,7 @@ import '../../../../l10n/app_localizations.dart';
 class SplitSection extends StatefulWidget {
   final Duration currentPosition;
   final VoidCallback onSplit;
+  final bool isSplitting;
   final List<String>? resultPaths;
   final Future<void> Function(String filePath, String newName)? onRename;
   final void Function(String filePath)? onCompress;
@@ -19,6 +20,7 @@ class SplitSection extends StatefulWidget {
     super.key,
     required this.currentPosition,
     required this.onSplit,
+    this.isSplitting = false,
     this.resultPaths,
     this.onRename,
     this.onCompress,
@@ -189,9 +191,17 @@ class _SplitSectionState extends State<SplitSection> {
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
-              onPressed: widget.onSplit,
-              icon: const Icon(Icons.content_cut),
-              label: Text(l10n.splitAtCurrentPosition),
+              onPressed: widget.isSplitting ? null : widget.onSplit,
+              icon: widget.isSplitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.content_cut),
+              label: Text(widget.isSplitting
+                  ? l10n.splitting
+                  : l10n.splitAtCurrentPosition),
             ),
             if (widget.resultPaths != null) ...[
               const SizedBox(height: 16),
@@ -249,53 +259,59 @@ class _FileTile extends StatelessWidget {
         color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.audio_file,
-              size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          Row(
+            children: [
+              Icon(Icons.audio_file,
+                  size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
                   name,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  fileSize != null
-                      ? '${formatSize(fileSize!)}  ·  $ext'
-                      : ext,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 30),
+            child: Text(
+              fileSize != null
+                  ? '${formatSize(fileSize!)}  ·  $ext'
+                  : ext,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
-          const SizedBox(width: 4),
-          _ActionIcon(
-            icon: Icons.edit,
-            tooltip: l10n.rename,
-            onTap: onRename,
-          ),
-          _ActionIcon(
-            icon: Icons.compress,
-            tooltip: l10n.compress,
-            onTap: onCompress,
-          ),
-          _ActionIcon(
-            icon: Icons.folder_open,
-            tooltip: l10n.showInFolder,
-            onTap: onOpenFolder,
-          ),
-          _ActionIcon(
-            icon: Icons.share,
-            tooltip: l10n.share,
-            onTap: onShare,
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              _ActionIcon(
+                icon: Icons.edit,
+                tooltip: l10n.rename,
+                onTap: onRename,
+              ),
+              _ActionIcon(
+                icon: Icons.compress,
+                tooltip: l10n.compress,
+                onTap: onCompress,
+              ),
+              _ActionIcon(
+                icon: Icons.folder_open,
+                tooltip: l10n.showInFolder,
+                onTap: onOpenFolder,
+              ),
+              _ActionIcon(
+                icon: Icons.share,
+                tooltip: l10n.share,
+                onTap: onShare,
+              ),
+            ],
           ),
         ],
       ),

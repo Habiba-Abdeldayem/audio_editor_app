@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -71,9 +72,18 @@ class _AudioEditorView extends StatelessWidget {
     );
   }
 
-  void _openFileCompressSheet(BuildContext context, String filePath) {
+  Future<void> _openFileCompressSheet(
+      BuildContext context, String filePath) async {
     final cubit = context.read<AudioEditorCubit>();
+    int fileSizeBytes = 0;
+    try {
+      final file = File(filePath);
+      if (await file.exists()) {
+        fileSizeBytes = await file.length();
+      }
+    } catch (_) {}
     cubit.loadCompressionOptions();
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -82,7 +92,7 @@ class _AudioEditorView extends StatelessWidget {
         child: BlocBuilder<AudioEditorCubit, AudioEditorState>(
           builder: (context, state) {
             return CompressSheet(
-              originalSizeBytes: 0,
+              originalSizeBytes: fileSizeBytes,
               options: state.compressionOptions,
               isLoadingOptions:
                   state.compressionStatus == CompressionStatus.loadingOptions,
@@ -231,6 +241,7 @@ class _AudioEditorView extends StatelessWidget {
                 SplitSection(
                   currentPosition: state.position,
                   onSplit: () => context.read<AudioEditorCubit>().splitAudio(),
+                  isSplitting: state.isSplitting,
                   resultPaths: state.splitResultPaths,
                   onRename: (filePath, newName) =>
                       context.read<AudioEditorCubit>().renameSplitFile(filePath, newName),

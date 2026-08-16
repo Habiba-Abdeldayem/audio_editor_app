@@ -26,6 +26,7 @@
   "split": "تقسيم",
   "splitDescription": "يقسم إلى ملفين عند مؤشر التشغيل الحالي — الدقيقة {minute}، {seconds} ثانية ({duration}).",
   "splitAtCurrentPosition": "تقسيم عند الموقع الحالي",
+  "splitting": "جاري التقسيم...",
   "createdFiles": "الملفات المنشأة",
   "fileNoLongerExists": "الملف لم يعد موجودًا.",
   "couldNotShareFile": "تعذر مشاركة الملف: {error}",

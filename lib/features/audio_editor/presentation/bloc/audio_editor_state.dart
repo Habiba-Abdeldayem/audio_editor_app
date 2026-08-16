@@ -22,6 +22,7 @@ class AudioEditorState extends Equatable {
   final LoadingStep? loadingStep;
 
   // Split
+  final bool isSplitting;
   final List<String>? splitResultPaths;
 
   // Compression
@@ -46,6 +47,7 @@ class AudioEditorState extends Equatable {
     this.isPlaying = false,
     this.failure,
     this.loadingStep,
+    this.isSplitting = false,
     this.splitResultPaths,
     this.compressionStatus = CompressionStatus.idle,
     this.compressionOptions = const [],
@@ -74,6 +76,7 @@ class AudioEditorState extends Equatable {
     Failure? failure,
     bool clearFailure = false,
     LoadingStep? loadingStep,
+    bool? isSplitting,
     List<String>? splitResultPaths,
     CompressionStatus? compressionStatus,
     List<CompressionOption>? compressionOptions,
@@ -92,6 +95,7 @@ class AudioEditorState extends Equatable {
       isPlaying: isPlaying ?? this.isPlaying,
       failure: clearFailure ? null : (failure ?? this.failure),
       loadingStep: loadingStep ?? this.loadingStep,
+      isSplitting: isSplitting ?? this.isSplitting,
       splitResultPaths: splitResultPaths ?? this.splitResultPaths,
       compressionStatus: compressionStatus ?? this.compressionStatus,
       compressionOptions: compressionOptions ?? this.compressionOptions,
@@ -114,6 +118,7 @@ class AudioEditorState extends Equatable {
         isPlaying,
         failure,
         loadingStep,
+        isSplitting,
         splitResultPaths,
         compressionStatus,
         compressionOptions,

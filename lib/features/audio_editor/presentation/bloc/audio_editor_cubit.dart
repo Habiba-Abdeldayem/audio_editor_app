@@ -156,6 +156,8 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
       return;
     }
 
+    emit(state.copyWith(isSplitting: true));
+
     final result = await splitAudioFile(
       SplitAudioFileParams(
           filePath: track.filePath, splitPoint: state.position),
@@ -163,9 +165,9 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
 
     result.fold(
       (failure) =>
-          emit(state.copyWith(status: EditorStatus.error, failure: failure)),
+          emit(state.copyWith(isSplitting: false, status: EditorStatus.error, failure: failure)),
       (paths) =>
-          emit(state.copyWith(splitResultPaths: paths, clearFailure: true)),
+          emit(state.copyWith(isSplitting: false, splitResultPaths: paths, clearFailure: true)),
     );
   }
 

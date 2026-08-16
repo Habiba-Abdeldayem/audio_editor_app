@@ -88,6 +88,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splitAtCurrentPosition => 'Split at current position';
 
   @override
+  String get splitting => 'Splitting...';
+
+  @override
   String get createdFiles => 'Created files';
 
   @override

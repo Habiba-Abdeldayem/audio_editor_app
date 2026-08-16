@@ -146,6 +146,11 @@
     "description": "Button label to split the audio at the current playhead."
   },
 
+  "splitting": "Splitting...",
+  "@splitting": {
+    "description": "Label shown on the split button while splitting is in progress."
+  },
+
   "createdFiles": "Created files",
   "@createdFiles": {
     "description": "Label above the list of files created by a split."

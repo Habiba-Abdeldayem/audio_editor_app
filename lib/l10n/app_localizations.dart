@@ -248,6 +248,12 @@ abstract class AppLocalizations {
   /// **'Split at current position'**
   String get splitAtCurrentPosition;
 
+  /// Label shown on the split button while splitting is in progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Splitting...'**
+  String get splitting;
+
   /// Label above the list of files created by a split.
   ///
   /// In en, this message translates to:

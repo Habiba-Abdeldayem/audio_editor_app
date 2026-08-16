@@ -88,6 +88,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get splitAtCurrentPosition => 'تقسيم عند الموقع الحالي';
 
   @override
+  String get splitting => 'جاري التقسيم...';
+
+  @override
   String get createdFiles => 'الملفات المنشأة';
 
   @override
