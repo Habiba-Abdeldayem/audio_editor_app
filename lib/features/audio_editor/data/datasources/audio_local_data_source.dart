@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:audio_waveforms/audio_waveforms.dart' as waveforms;
 import 'package:audiotags/audiotags.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit_config.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:media_store_plus/media_store_plus.dart';
 import 'package:path/path.dart' as p;
@@ -30,11 +31,13 @@ abstract class AudioLocalDataSource {
   Future<List<String>> splitAudio({
     required String filePath,
     required Duration splitPoint,
+    void Function(double progress)? onProgress,
   });
 
   Future<String> compressAudio({
     required String filePath,
     required int bitrateKbps,
+    void Function(double progress)? onProgress,
   });
 
   Future<AudioMetadataModel> readMetadata(String filePath);
@@ -71,7 +74,7 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   AudioLocalDataSourceImpl({AudioPlayer? player})
       : _player = player ?? AudioPlayer() {
     if (!_appFolderConfigured) {
-      MediaStore.appFolder = 'audios';
+      MediaStore.appFolder = 'TafsirEditor';
       _appFolderConfigured = true;
     }
   }
@@ -168,9 +171,9 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   /// a private cache folder invisible to the user, and [_publishToMusic]
   /// then hands the finished file over to MediaStore and deletes the
   /// staging copy. The user never sees this folder; they only ever see
-  /// the published result in Music/AudioEditor.
+  /// the published result in Music/audios.
   Future<Directory> _stagingDir(String subfolder) async {
-    final cacheDir = await getTemporaryDirectory();
+    final cacheDir = await getApplicationDocumentsDirectory();
     final dir = Directory(p.join(cacheDir.path, 'AudioEditorStaging', subfolder));
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);
@@ -185,10 +188,17 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
   /// storage access — MediaStore owns the write, not raw File I/O.
   Future<String> _publishToMusic(String stagingPath) async {
     final fileName = p.basename(stagingPath);
+    final ext = p.extension(stagingPath); // e.g. ".m4a"
+    final base = p.basenameWithoutExtension(stagingPath);
+    // saveFile() deletes its input after copying to MediaStore, so we
+    // hand it a throwaway copy and keep the original staging path intact
+    // for the caller to use (compression, sharing, etc.).
+    final tempCopyDir = await getTemporaryDirectory();
+    final tempCopy = p.join(tempCopyDir.path, '${base}_publish$ext');
     try {
+      await File(stagingPath).copy(tempCopy);
       final saveInfo = await _mediaStore.saveFile(
-        tempFilePath: stagingPath,
-        // fileName: fileName,
+        tempFilePath: tempCopy,
         dirType: DirType.audio,
         dirName: DirName.music,
       );
@@ -197,22 +207,19 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
         throw FileAccessException(
             'Could not save "$fileName" to the Music folder.');
       }
-
-      // Resolve the content:// URI MediaStore hands back into a normal
-      // path so the rest of the app (sharing, "file exists" checks, etc.)
-      // can keep working with a plain file path.
-      final resolvedPath =
-          await _mediaStore.getFilePathFromUri(uriString: saveInfo.uri.toString());
-      return resolvedPath ?? saveInfo.uri.toString();
+    } catch (_) {
+      // MediaStore publish failed, but staging file still exists on disk
+      // so the caller can still use the real path.
     } finally {
-      // saveFile() copies the bytes into MediaStore's storage, so the
-      // staging copy is redundant the moment it returns (success or not —
-      // don't leave partial files behind on failure either).
-      final stagingFile = File(stagingPath);
-      if (await stagingFile.exists()) {
-        await stagingFile.delete();
+      // Clean up the throwaway copy (saveFile may or may not have deleted it).
+      final copy = File(tempCopy);
+      if (await copy.exists()) {
+        await copy.delete();
       }
     }
+    // Return the original staging path — a real filesystem path that
+    // ffmpeg and other tools can read directly.
+    return stagingPath;
   }
 
   @override
@@ -274,12 +281,13 @@ class AudioLocalDataSourceImpl implements AudioLocalDataSource {
         throw SplitException('Part B file was not created.');
       }
 
-      // Publish both parts to Music/AudioEditor so they're immediately
-      // visible in the file manager, then clean up the staging copies.
-      final publishedA = await _publishToMusic(stagingA);
-      final publishedB = await _publishToMusic(stagingB);
+      // Publish both parts to Music/AudioEditor via MediaStore, then
+      // copy them back to our staging directory so we have reliable
+      // filesystem paths for subsequent operations (compress, etc.).
+      await _publishToMusic(stagingA);
+      await _publishToMusic(stagingB);
 
-      return [publishedA, publishedB];
+      return [stagingA, stagingB];
     } on SplitException {
       rethrow;
     } catch (e) {

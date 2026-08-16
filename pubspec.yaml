@@ -49,6 +49,9 @@ dependencies:
   # Value formatting
   intl: ^0.20.2
 
+  # Local persistence
+  shared_preferences: ^2.2.2
+
   cupertino_icons: ^1.0.8
   share_plus: ^12.0.2
   media_store_plus: ^0.1.3

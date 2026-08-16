@@ -188,14 +188,14 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
     );
   }
 
-  Future<void> loadCompressionOptions() async {
-    final track = state.track;
-    if (track == null) return;
+  Future<void> loadCompressionOptions([String? filePath]) async {
+    final path = filePath ?? state.track?.filePath;
+    if (path == null) return;
 
     emit(state.copyWith(compressionStatus: CompressionStatus.loadingOptions));
 
     final result = await getCompressionOptions(
-        GetCompressionOptionsParams(track.filePath));
+        GetCompressionOptionsParams(path));
 
     result.fold(
       (failure) => emit(state.copyWith(
@@ -230,6 +230,15 @@ class AudioEditorCubit extends Cubit<AudioEditorState> {
         compressedFilePath: outputPath,
       )),
     );
+  }
+
+  void resetFileCompression() {
+    emit(state.copyWith(
+      fileCompressionStatus: CompressionStatus.idle,
+      fileCompressedPath: null,
+      fileCompressingPath: null,
+      clearFailure: true,
+    ));
   }
 
   Future<void> compressFile({

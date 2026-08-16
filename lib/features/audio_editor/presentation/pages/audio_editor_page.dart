@@ -8,9 +8,11 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../bloc/audio_editor_cubit.dart';
 import '../bloc/audio_editor_state.dart';
+import '../bloc/settings_cubit.dart';
 import '../widgets/compress_sheet.dart';
 import '../widgets/metadata_editor_sheet.dart';
 import '../widgets/playback_controls.dart';
+import '../widgets/settings_sheet.dart';
 import '../widgets/split_section.dart';
 import '../widgets/waveform_player.dart';
 
@@ -75,6 +77,7 @@ class _AudioEditorView extends StatelessWidget {
   Future<void> _openFileCompressSheet(
       BuildContext context, String filePath) async {
     final cubit = context.read<AudioEditorCubit>();
+    cubit.resetFileCompression();
     int fileSizeBytes = 0;
     try {
       final file = File(filePath);
@@ -82,7 +85,7 @@ class _AudioEditorView extends StatelessWidget {
         fileSizeBytes = await file.length();
       }
     } catch (_) {}
-    cubit.loadCompressionOptions();
+    cubit.loadCompressionOptions(filePath);
     if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
@@ -149,7 +152,26 @@ class _AudioEditorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).audioEditorAppBarTitle)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context).audioEditorAppBarTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: AppLocalizations.of(context).settings,
+            onPressed: () {
+              final settingsCubit = context.read<SettingsCubit>();
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => BlocProvider.value(
+                  value: settingsCubit,
+                  child: SettingsSheet(cubit: settingsCubit),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: BlocConsumer<AudioEditorCubit, AudioEditorState>(
         listenWhen: (previous, current) => current.failure != null,
         listener: (context, state) {
@@ -217,9 +239,12 @@ class _AudioEditorView extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  Formatters.fileSize(track.fileSizeBytes),
-                  style: Theme.of(context).textTheme.bodySmall,
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    Formatters.fileSize(track.fileSizeBytes),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 WaveformPlayer(

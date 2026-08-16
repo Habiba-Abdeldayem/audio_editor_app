@@ -144,7 +144,7 @@ class _SplitSectionState extends State<SplitSection> {
       }
       final intent = AndroidIntent(
         action: 'android.intent.action.VIEW',
-        data: 'content://com.android.externalstorage.documents/document/primary%3AMusic%2Faudios',
+        data: 'content://com.android.externalstorage.documents/document/primary%3AMusic%2FTafsirEditor',
         type: 'vnd.android.document/directory',
         flags: <int>[
           Flag.FLAG_ACTIVITY_NEW_TASK,
@@ -279,12 +279,15 @@ class _FileTile extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.only(left: 30),
-            child: Text(
-              fileSize != null
-                  ? '${formatSize(fileSize!)}  ·  $ext'
-                  : ext,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Text(
+                fileSize != null
+                    ? '${formatSize(fileSize!)}  ·  $ext'
+                    : ext,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),

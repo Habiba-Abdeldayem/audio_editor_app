@@ -46,5 +46,11 @@
   "compressionError": "تعذر ضغط ملف الصوت.",
   "metadataError": "تعذر قراءة أو كتابة البيانات الوصفية.",
   "validationError": "فشل التحقق.",
-  "unknownError": "حدث خطأ ما."
+  "unknownError": "حدث خطأ ما.",
+  "settings": "الإعدادات",
+  "theme": "المظهر",
+  "systemDefault": "الافتراضي للنظام",
+  "light": "فاتح",
+  "dark": "داكن",
+  "language": "اللغة"
 }

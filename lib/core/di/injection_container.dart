@@ -14,6 +14,7 @@ import '../../features/audio_editor/domain/usecases/rename_audio_file.dart';
 import '../../features/audio_editor/domain/usecases/split_audio_file.dart';
 import '../../features/audio_editor/domain/usecases/update_audio_metadata.dart';
 import '../../features/audio_editor/presentation/bloc/audio_editor_cubit.dart';
+import '../../features/audio_editor/presentation/bloc/settings_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -49,6 +50,8 @@ Future<void> initDependencies() async {
   sl.registerFactory(() => WatchPlayingState(sl()));
 
   // Presentation
+  sl.registerLazySingleton<SettingsCubit>(() => SettingsCubit());
+
   sl.registerFactory(
     () => AudioEditorCubit(
       loadAudioFile: sl(),

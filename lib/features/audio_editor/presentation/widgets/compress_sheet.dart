@@ -38,9 +38,12 @@ class CompressSheet extends StatelessWidget {
             Text(l10n.compressAudio,
                 style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 4),
-            Text(
-              l10n.currentSize(Formatters.fileSize(originalSizeBytes)),
-              style: Theme.of(context).textTheme.bodyMedium,
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Text(
+                l10n.currentSize(Formatters.fileSize(originalSizeBytes)),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
             const SizedBox(height: 16),
             if (isLoadingOptions)
@@ -97,10 +100,13 @@ class CompressSheet extends StatelessWidget {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(option.label),
-                  subtitle: Text(
-                    '${Formatters.fileSize(originalSizeBytes)} → '
-                    '~${Formatters.fileSize(option.estimatedBytes)} '
-                    '(~$savingPercent% smaller)',
+                  subtitle: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      '${Formatters.fileSize(originalSizeBytes)} → '
+                      '~${Formatters.fileSize(option.estimatedBytes)} '
+                      '(~$savingPercent% smaller)',
+                    ),
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => onOptionSelected(option.bitrateKbps),

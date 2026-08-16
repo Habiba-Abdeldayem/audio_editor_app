@@ -155,4 +155,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknownError => 'Something went wrong.';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get systemDefault => 'System default';
+
+  @override
+  String get light => 'Light';
+
+  @override
+  String get dark => 'Dark';
+
+  @override
+  String get language => 'Language';
 }

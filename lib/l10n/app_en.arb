@@ -267,5 +267,35 @@
   "unknownError": "Something went wrong.",
   "@unknownError": {
     "description": "Fallback error message for unexpected failures."
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Title of the settings bottom sheet."
+  },
+
+  "theme": "Theme",
+  "@theme": {
+    "description": "Section header for theme selection."
+  },
+
+  "systemDefault": "System default",
+  "@systemDefault": {
+    "description": "Theme option that follows the OS setting."
+  },
+
+  "light": "Light",
+  "@light": {
+    "description": "Light theme option."
+  },
+
+  "dark": "Dark",
+  "@dark": {
+    "description": "Dark theme option."
+  },
+
+  "language": "Language",
+  "@language": {
+    "description": "Section header for language selection."
   }
 }

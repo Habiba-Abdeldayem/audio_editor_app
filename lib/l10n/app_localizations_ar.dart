@@ -155,4 +155,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get unknownError => 'حدث خطأ ما.';
+
+  @override
+  String get settings => 'الإعدادات';
+
+  @override
+  String get theme => 'المظهر';
+
+  @override
+  String get systemDefault => 'الافتراضي للنظام';
+
+  @override
+  String get light => 'فاتح';
+
+  @override
+  String get dark => 'داكن';
+
+  @override
+  String get language => 'اللغة';
 }
