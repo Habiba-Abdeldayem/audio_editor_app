@@ -93,7 +93,10 @@ class SplitSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      onPressed: () => _shareFile(path),
+                      onPressed: () {
+                        print('Share button pressed for: $path');
+                        _shareFile(path);
+                      },
                       icon: const Icon(Icons.share),
                       tooltip: 'Share',
                       iconSize: 20,
